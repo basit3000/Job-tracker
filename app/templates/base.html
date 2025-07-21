@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}Job Tracker{% endblock %}</title>
+</head>
+<body>
+  <header>
+    <h1>Job Tracker</h1>
+    <nav>
+      <a href="{{ url_for('main.home') }}">Home</a> |
+      {% if current_user.is_authenticated %}
+        <span>Welcome, {{ current_user.email }}!</span> |
+        <a href="{{ url_for('auth.logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}">Login</a> |
+        <a href="{{ url_for('auth.register') }}">Register</a>
+      {% endif %}
+    </nav>
+    <hr />
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <hr />
+    <p>&copy; 2025 Job Tracker</p>
+  </footer>
+</body>
+</html>
