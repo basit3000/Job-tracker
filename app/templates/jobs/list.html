@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Your Job Applications</h2>
+  <a href="{{ url_for('jobs.add_job') }}">Add New Application</a>
+
+  {% if applications %}
+    <ul>
+      {% for job in applications %}
+        <li>
+          <strong>{{ job.company }}</strong> - {{ job.status }}
+          <a href="{{ url_for('jobs.edit_job', id=job.id) }}">Edit</a>
+          <form action="{{ url_for('jobs.delete_job', id=job.id) }}" method="POST" style="display:inline;">
+            <button type="submit" onclick="return confirm('Delete this application?');">Delete</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No job applications found.</p>
+  {% endif %}
+{% endblock %}
