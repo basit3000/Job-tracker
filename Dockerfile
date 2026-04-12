@@ -13,4 +13,4 @@ ENV FLASK_RUN_HOST 0.0.0.0
 
 EXPOSE 5000
 
-CMD ["flask", "run", "FLASK_RUN_HOST", "--reload"]
+CMD ["flask", "run", "--host=0.0.0.0", "--reload"]
