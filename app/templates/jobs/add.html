@@ -1,39 +1,46 @@
 {% extends 'base.html' %}
 
 {% block title %}Add Job Application{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <h2 class="mb-4">Add Job Application</h2>
-    
-    <form method="POST" action="{{ url_for('jobs.add_job') }}">
-        <div class="form-group mb-3">
-            <label for="company">Company Name</label>
-            <input type="text" class="form-control" id="company" name="company" required>
+<div class="mx-auto" style="max-width: 600px;">
+  <h2>Add Job Application</h2>
+
+  <div class="card">
+    <div class="card-body p-4">
+      <form method="POST" action="{{ url_for('jobs.add_job') }}">
+        <div class="mb-3">
+          <label for="company" class="form-label">Company Name</label>
+          <input type="text" class="form-control" id="company" name="company" required>
         </div>
 
-        <div class="form-group mb-3">
-            <label for="contact_person">Contact Person</label>
-            <input type="text" class="form-control" id="contact_person" name="contact_person">
+        <div class="mb-3">
+          <label for="contact_person" class="form-label">Contact Person</label>
+          <input type="text" class="form-control" id="contact_person" name="contact_person">
         </div>
 
-        <div class="form-group mb-3">
-            <label for="status">Status</label>
-            <select class="form-control" id="status" name="status">
-                <option>Applied</option>
-                <option>Interviewing</option>
-                <option>Offer</option>
-                <option>Rejected</option>
-                <option>Accepted</option>
-            </select>
+        <div class="mb-3">
+          <label for="status" class="form-label">Status</label>
+          <select class="form-select" id="status" name="status">
+            <option>Applied</option>
+            <option>Interviewing</option>
+            <option>Offer</option>
+            <option>Rejected</option>
+            <option>Accepted</option>
+          </select>
         </div>
 
-        <div class="form-group mb-3">
-            <label for="notes">Notes</label>
-            <textarea class="form-control" id="notes" name="notes" rows="4"></textarea>
+        <div class="mb-3">
+          <label for="notes" class="form-label">Notes</label>
+          <textarea class="form-control" id="notes" name="notes" rows="4"></textarea>
         </div>
 
-        <button type="submit" class="btn btn-primary">Add Job</button>
-        <a href="{{ url_for('jobs.job_list') }}" class="btn btn-secondary">Cancel</a>
-    </form>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Add Job</button>
+          <a href="{{ url_for('jobs.job_list') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}

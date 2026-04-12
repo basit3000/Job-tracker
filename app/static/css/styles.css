@@ -1,41 +1,188 @@
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+}
+
 body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #fefefe;
-    color: #333;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-header, footer {
-    background-color: #ffd166; 
-    color: #2d2d2d;
-    text-align: center;
-    padding: 20px 0;
-    border-radius: 8px;
+/* ── Navbar ── */
+.navbar {
+  background-color: var(--surface) !important;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--primary) !important;
+}
+.nav-link {
+  color: var(--text-muted) !important;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+.nav-link:hover,
+.nav-link.active {
+  color: var(--primary) !important;
 }
 
-.container {
-    max-width: 800px;
-    margin: 40px auto;
-    padding: 30px;
-    background-color: #ffffff;
-    margin: 0 15%;
+/* ── Main Content ── */
+main.container {
+  max-width: 900px;
+  flex: 1;
+  padding-top: 2rem;
+  padding-bottom: 3rem;
 }
 
+/* ── Cards ── */
+.card {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  background: var(--surface);
+}
+.card-header {
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+
+/* ── Headings ── */
+h1, h2, h3 {
+  color: var(--text);
+  font-weight: 700;
+}
+h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+/* ── Buttons ── */
+.btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+.btn-outline-primary {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.btn-outline-primary:hover {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.btn-danger {
+  background-color: var(--danger);
+  border-color: var(--danger);
+}
+.btn-danger:hover {
+  background-color: var(--danger-hover);
+  border-color: var(--danger-hover);
+}
+
+/* ── Forms ── */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.15);
+}
+.form-label {
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 0.35rem;
+}
+
+/* ── Job List Table ── */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table thead th {
+  background-color: var(--bg);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--border);
+}
+.table tbody tr {
+  transition: background-color 0.1s;
+}
+.table tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* ── Status Badges ── */
+.badge-applied     { background-color: var(--info); }
+.badge-interviewing { background-color: var(--warning); color: #000; }
+.badge-offer       { background-color: var(--success); }
+.badge-rejected    { background-color: var(--danger); }
+.badge-accepted    { background-color: #10b981; }
+
+/* ── Flash Messages ── */
+.alert {
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* ── Footer ── */
 footer {
-    margin-top: auto;
+  margin-top: auto;
+  padding: 1.5rem 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
 }
 
-h1, h2 {
-    color: #073b4c;
+/* ── Empty State ── */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}
+.empty-state svg {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 1rem;
+  opacity: 0.4;
 }
 
+/* ── Auth Forms ── */
+.auth-card {
+  max-width: 440px;
+  margin: 2rem auto;
+}
+
+/* ── Links ── */
 a {
-    color: #ef476f;
-    text-decoration: none;
+  color: var(--primary);
+  text-decoration: none;
 }
 a:hover {
-    text-decoration: underline;
+  color: var(--primary-hover);
+  text-decoration: underline;
 }

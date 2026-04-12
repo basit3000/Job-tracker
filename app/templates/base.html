@@ -2,46 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}Job Tracker{% endblock %}</title>
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
-    integrity="sha384-ENjdO4Dr2bkBIFxQpeo1eZ5HvW+8e7ZRp0C/kV7xwlZpONdJwBC6vRw5yXbI5mo4"
-    crossorigin="anonymous"
   >
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   {% block head %}{% endblock %}
 </head>
 <body>
-  
-  <header>
-    <h1>Job Tracker</h1>
-    <nav>
-      <a href="{{ url_for('main.home') }}">Home</a> |
-      {% if current_user.is_authenticated %}
-        <span>Welcome, {{ current_user.email }}!</span> |
-        <a href="{{ url_for('auth.logout') }}">Logout</a>
-      {% else %}
-        <a href="{{ url_for('auth.login') }}">Login</a> |
-        <a href="{{ url_for('auth.register') }}">Register</a>
-      {% endif %}
-    </nav>
-    <hr />
-  </header>
+
+  <nav class="navbar navbar-expand-lg">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('main.home') }}">
+        <i class="bi bi-briefcase-fill me-2"></i>Job Tracker
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-center gap-1">
+          {% if current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('jobs.job_list') }}"><i class="bi bi-list-check me-1"></i>My Jobs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('jobs.add_job') }}"><i class="bi bi-plus-circle me-1"></i>Add Job</a>
+            </li>
+            <li class="nav-item">
+              <span class="nav-link text-muted"><i class="bi bi-person-circle me-1"></i>{{ current_user.email }}</span>
+            </li>
+            <li class="nav-item">
+              <a class="btn btn-outline-primary btn-sm" href="{{ url_for('auth.logout') }}">Logout</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="btn btn-primary btn-sm" href="{{ url_for('auth.register') }}">Register</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
 
   <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show mt-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
     {% block content %}{% endblock %}
   </main>
-  
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+R1qtDURgkG59g8wEhrp0Boqyl3Qx"
-    crossorigin="anonymous"
-  ></script>
 
   <footer>
-    <hr />
-    <p>&copy; 2025 Job Tracker</p>
+    <div class="container">
+      <p class="mb-0">&copy; 2025 Job Tracker</p>
+    </div>
   </footer>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
 </body>
 </html>

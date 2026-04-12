@@ -1,7 +1,44 @@
-{% extends 'base.html '%}
+{% extends 'base.html' %}
 
-{% block title %} Edit Job {% endblock %}
+{% block title %}Edit Job{% endblock %}
+
 {% block content %}
+<div class="mx-auto" style="max-width: 600px;">
+  <h2>Edit Job Application</h2>
 
+  <div class="card">
+    <div class="card-body p-4">
+      <form method="POST" action="{{ url_for('jobs.edit_job', id=job.id) }}">
+        <div class="mb-3">
+          <label for="company" class="form-label">Company Name</label>
+          <input type="text" class="form-control" id="company" name="company" value="{{ job.company }}" required>
+        </div>
 
-{% endblock%}
+        <div class="mb-3">
+          <label for="contact_person" class="form-label">Contact Person</label>
+          <input type="text" class="form-control" id="contact_person" name="contact_person" value="{{ job.contact_person or '' }}">
+        </div>
+
+        <div class="mb-3">
+          <label for="status" class="form-label">Status</label>
+          <select class="form-select" id="status" name="status">
+            {% for s in ['Applied', 'Interviewing', 'Offer', 'Rejected', 'Accepted'] %}
+              <option {% if job.status == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="notes" class="form-label">Notes</label>
+          <textarea class="form-control" id="notes" name="notes" rows="4">{{ job.notes or '' }}</textarea>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <a href="{{ url_for('jobs.job_list') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
