@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.job_title }} - Job Tracker{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('jobs.job_list') }}" class="small text-muted"><i class="bi bi-arrow-left me-1"></i>Back to applications</a>
+</div>
+
+<div class="card">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div>
+        <span class="badge badge-{{ job.status_slug }} mb-2">{{ job.status }}</span>
+        <h2 class="mb-1">{{ job.job_title }}</h2>
+        <p class="text-muted mb-0"><i class="bi bi-building me-1"></i>{{ job.company }}{% if job.location %} &middot; {{ job.location }}{% endif %}</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('jobs.edit_job', id=job.id) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
+        <form action="{{ url_for('jobs.delete_job', id=job.id) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this application?');"><i class="bi bi-trash me-1"></i>Delete</button>
+        </form>
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <dl class="detail-grid">
+      <dt>Salary</dt><dd>{{ job.salary or '—' }}</dd>
+      <dt>Contact</dt><dd>{{ job.contact_person or '—' }}</dd>
+      <dt>Job posting</dt>
+      <dd>
+        {% if job.job_url %}
+          <a href="{{ job.job_url }}" target="_blank" rel="noopener noreferrer">{{ job.job_url }} <i class="bi bi-box-arrow-up-right small"></i></a>
+        {% else %}—{% endif %}
+      </dd>
+      <dt>Resume</dt>
+      <dd>
+        {% if job.resume_filename %}
+          <a href="{{ url_for('jobs.download_resume', id=job.id) }}"><i class="bi bi-paperclip me-1"></i>Download</a>
+        {% else %}—{% endif %}
+      </dd>
+      <dt>Applied</dt><dd>{{ job.applied_date.strftime('%B %d, %Y') if job.applied_date else '—' }}</dd>
+      <dt>Last updated</dt><dd>{{ job.updated_date.strftime('%B %d, %Y') if job.updated_date else '—' }}</dd>
+    </dl>
+
+    {% if job.notes %}
+    <div class="mt-4">
+      <h3 class="h6 text-muted text-uppercase">Notes</h3>
+      <div class="notes-block">{{ job.notes }}</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

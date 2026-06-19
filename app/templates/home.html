@@ -1,21 +1,48 @@
 {% extends "base.html" %}
 
-{% block title %}Home - Job Tracker{% endblock %}
+{% block title %}Job Tracker - Organize your job search{% endblock %}
 
 {% block content %}
-<div class="text-center py-5">
-  <h1 class="mb-3">Track Your Job Search</h1>
-  <p class="lead text-muted mb-4">Stay organized. Log every application, interview, and offer in one place.</p>
-  {% if current_user.is_authenticated %}
-    <a href="{{ url_for('jobs.job_list') }}" class="btn btn-primary btn-lg me-2">
-      <i class="bi bi-list-check me-1"></i>View Applications
-    </a>
-    <a href="{{ url_for('jobs.add_job') }}" class="btn btn-outline-primary btn-lg">
-      <i class="bi bi-plus-circle me-1"></i>Add New
-    </a>
-  {% else %}
-    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-2">Get Started</a>
-    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg">Login</a>
-  {% endif %}
-</div>
+<section class="hero text-center">
+  <span class="hero-eyebrow"><i class="bi bi-stars me-1"></i>Your job search, organized</span>
+  <h1 class="hero-title">Track every application in one place</h1>
+  <p class="hero-subtitle">
+    Log applications, follow each one from <em>Applied</em> to <em>Offer</em>, attach your
+    resume, and never lose track of a follow-up again.
+  </p>
+  <div class="d-flex gap-2 justify-content-center flex-wrap">
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('jobs.dashboard') }}" class="btn btn-primary btn-lg">
+        <i class="bi bi-grid-1x2 me-1"></i>Go to dashboard
+      </a>
+    {% else %}
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Get started free</a>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg">Login</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="row g-4 mt-2">
+  <div class="col-md-4">
+    <div class="feature-card">
+      <div class="feature-icon"><i class="bi bi-kanban"></i></div>
+      <h3>Status tracking</h3>
+      <p>Move applications through Wishlist, Applied, Interviewing, Offer, and beyond.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="feature-card">
+      <div class="feature-icon"><i class="bi bi-search"></i></div>
+      <h3>Search &amp; filter</h3>
+      <p>Instantly find any application by company, role, or status.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="feature-card">
+      <div class="feature-icon"><i class="bi bi-file-earmark-arrow-up"></i></div>
+      <h3>Resume attachments</h3>
+      <p>Keep the exact resume you sent attached to each application.</p>
+    </div>
+  </div>
+</section>
 {% endblock %}

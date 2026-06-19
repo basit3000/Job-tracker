@@ -3,21 +3,60 @@
 {% block title %}My Applications - Job Tracker{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
   <h2 class="mb-0">My Applications</h2>
   <a href="{{ url_for('jobs.add_job') }}" class="btn btn-primary btn-sm">
     <i class="bi bi-plus-circle me-1"></i>Add New
   </a>
 </div>
 
+<form method="GET" action="{{ url_for('jobs.job_list') }}" class="filter-bar card mb-4">
+  <div class="card-body">
+    <div class="row g-2 align-items-end">
+      <div class="col-12 col-md-5">
+        <label class="form-label small text-muted mb-1">Search</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" class="form-control" placeholder="Company, role, location…" value="{{ current_search }}">
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label small text-muted mb-1">Status</label>
+        <select name="status" class="form-select">
+          <option value="">All statuses</option>
+          {% for s in statuses %}
+          <option value="{{ s }}" {{ 'selected' if current_status == s }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-muted mb-1">Sort</label>
+        <select name="sort" class="form-select">
+          {% for key, opt in sort_options.items() %}
+          <option value="{{ key }}" {{ 'selected' if current_sort == key }}>{{ opt[0] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-2 d-grid">
+        <button type="submit" class="btn btn-outline-primary">Apply</button>
+      </div>
+    </div>
+    {% if current_search or current_status %}
+    <div class="mt-2">
+      <a href="{{ url_for('jobs.job_list') }}" class="small text-muted"><i class="bi bi-x-circle me-1"></i>Clear filters</a>
+    </div>
+    {% endif %}
+  </div>
+</form>
+
 {% if applications %}
   <div class="card">
     <div class="table-responsive">
-      <table class="table table-hover mb-0">
+      <table class="table table-hover align-middle mb-0">
         <thead>
           <tr>
+            <th>Role</th>
             <th>Company</th>
-            <th>Contact</th>
             <th>Status</th>
             <th>Applied</th>
             <th class="text-end">Actions</th>
@@ -26,19 +65,25 @@
         <tbody>
           {% for job in applications %}
           <tr>
-            <td class="fw-semibold">{{ job.company }}</td>
-            <td class="text-muted">{{ job.contact_person or '—' }}</td>
             <td>
-              {% set status_lower = job.status|lower %}
-              <span class="badge badge-{{ status_lower }}">{{ job.status }}</span>
+              <a href="{{ url_for('jobs.job_detail', id=job.id) }}" class="fw-semibold text-decoration-none">{{ job.job_title }}</a>
+              {% if job.location %}<div class="text-muted small">{{ job.location }}</div>{% endif %}
             </td>
+            <td>{{ job.company }}</td>
+            <td><span class="badge badge-{{ job.status_slug }}">{{ job.status }}</span></td>
             <td class="text-muted">{{ job.applied_date.strftime('%b %d, %Y') if job.applied_date else '—' }}</td>
-            <td class="text-end">
-              <a href="{{ url_for('jobs.edit_job', id=job.id) }}" class="btn btn-outline-primary btn-sm me-1">
+            <td class="text-end text-nowrap">
+              {% if job.resume_filename %}
+              <a href="{{ url_for('jobs.download_resume', id=job.id) }}" class="btn btn-outline-secondary btn-sm me-1" title="Download resume">
+                <i class="bi bi-paperclip"></i>
+              </a>
+              {% endif %}
+              <a href="{{ url_for('jobs.edit_job', id=job.id) }}" class="btn btn-outline-primary btn-sm me-1" title="Edit">
                 <i class="bi bi-pencil"></i>
               </a>
               <form action="{{ url_for('jobs.delete_job', id=job.id) }}" method="POST" class="d-inline">
-                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this application?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete" onclick="return confirm('Delete this application?');">
                   <i class="bi bi-trash"></i>
                 </button>
               </form>
@@ -49,11 +94,17 @@
       </table>
     </div>
   </div>
+  <p class="text-muted small mt-2 mb-0">{{ applications|length }} application{{ '' if applications|length == 1 else 's' }}</p>
 {% else %}
   <div class="empty-state">
-    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
-    <p class="mt-2">No job applications yet.</p>
-    <a href="{{ url_for('jobs.add_job') }}" class="btn btn-primary">Add your first application</a>
+    <i class="bi bi-inbox"></i>
+    {% if current_search or current_status %}
+      <p class="mt-2">No applications match your filters.</p>
+      <a href="{{ url_for('jobs.job_list') }}" class="btn btn-outline-primary">Clear filters</a>
+    {% else %}
+      <p class="mt-2">No job applications yet.</p>
+      <a href="{{ url_for('jobs.add_job') }}" class="btn btn-primary">Add your first application</a>
+    {% endif %}
   </div>
 {% endif %}
 {% endblock %}

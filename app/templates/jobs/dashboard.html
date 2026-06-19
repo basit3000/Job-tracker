@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Job Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+  <div>
+    <h2 class="mb-1">Dashboard</h2>
+    <p class="text-muted mb-0">A snapshot of your job search.</p>
+  </div>
+  <a href="{{ url_for('jobs.add_job') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-1"></i>Add application
+  </a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-value">{{ total }}</div>
+      <div class="stat-label"><i class="bi bi-collection me-1"></i>Total</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-value">{{ active }}</div>
+      <div class="stat-label"><i class="bi bi-activity me-1"></i>In progress</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-value">{{ counts['Interviewing'] }}</div>
+      <div class="stat-label"><i class="bi bi-chat-dots me-1"></i>Interviewing</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-value">{{ counts['Offer'] + counts['Accepted'] }}</div>
+      <div class="stat-label"><i class="bi bi-trophy me-1"></i>Offers</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header">By status</div>
+      <div class="card-body">
+        {% if total %}
+          {% for status, count in counts.items() %}
+          <div class="status-row">
+            <a href="{{ url_for('jobs.job_list', status=status) }}" class="text-decoration-none">
+              <span class="badge badge-{{ status|lower|replace(' ', '-') }}">{{ status }}</span>
+            </a>
+            <div class="status-bar-track">
+              <div class="status-bar-fill badge-{{ status|lower|replace(' ', '-') }}"
+                   style="width: {{ (count / total * 100) if total else 0 }}%;"></div>
+            </div>
+            <span class="status-count">{{ count }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted mb-0">No data yet — add your first application.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Recent applications</span>
+        <a href="{{ url_for('jobs.job_list') }}" class="small">View all</a>
+      </div>
+      {% if recent %}
+        <div class="list-group list-group-flush">
+          {% for job in recent %}
+          <a href="{{ url_for('jobs.job_detail', id=job.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold">{{ job.job_title }}</div>
+              <div class="text-muted small">{{ job.company }}{% if job.location %} &middot; {{ job.location }}{% endif %}</div>
+            </div>
+            <span class="badge badge-{{ job.status_slug }}">{{ job.status }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="card-body">
+          <p class="text-muted mb-0">Nothing here yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

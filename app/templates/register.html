@@ -5,27 +5,34 @@
 {% block content %}
 <div class="auth-card">
   <div class="card">
-    <div class="card-body p-4">
-      <h2 class="text-center mb-4">Create an account</h2>
-      <form method="POST">
+    <div class="card-body p-4 p-md-5">
+      <div class="text-center mb-4">
+        <i class="bi bi-briefcase-fill auth-logo"></i>
+        <h2 class="mt-2 mb-1">Create your account</h2>
+        <p class="text-muted mb-0">Start tracking your job search today</p>
+      </div>
+      <form method="POST" novalidate>
         {{ form.hidden_tag() }}
         <div class="mb-3">
           {{ form.email.label(class="form-label") }}
-          {{ form.email(class="form-control", placeholder="you@example.com") }}
+          {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="you@example.com") }}
+          {% for error in form.email.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="mb-3">
           {{ form.password.label(class="form-label") }}
-          {{ form.password(class="form-control", placeholder="Choose a password") }}
+          {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="At least 8 characters") }}
+          {% for error in form.password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="mb-3">
           {{ form.confirm.label(class="form-label") }}
-          {{ form.confirm(class="form-control", placeholder="Confirm your password") }}
+          {{ form.confirm(class="form-control" + (" is-invalid" if form.confirm.errors else ""), placeholder="Confirm your password") }}
+          {% for error in form.confirm.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="d-grid">
           {{ form.submit(class="btn btn-primary") }}
         </div>
       </form>
-      <p class="text-center text-muted mt-3 mb-0">
+      <p class="text-center text-muted mt-4 mb-0">
         Already have an account? <a href="{{ url_for('auth.login') }}">Login</a>
       </p>
     </div>

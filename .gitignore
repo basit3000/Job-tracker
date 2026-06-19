@@ -2,6 +2,15 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+venv/
+.venv/
+env/
+
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
 .env
 .env.*
 

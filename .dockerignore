@@ -1,0 +1,22 @@
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite
+*.sqlite3
+instance/
+.git/
+.gitignore
+.dockerignore
+.vscode/
+.env
+.env.*
+uploads/
+README.md
+
+# Never bake local (git-ignored) migration scripts into the image — they can be
+# stale and cause schema drift. The container builds the schema from the models
+# via `flask init-db`. Mount a migrations/ dir at runtime if you want db upgrade.
+migrations/
