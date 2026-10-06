@@ -1,14 +1,7 @@
 {% extends "base.html" %}
+{% from "macros/forms.html" import field %}
 
 {% block title %}{{ title }} - Job Tracker{% endblock %}
-
-{% macro field(f, placeholder="") %}
-  <div class="mb-3">
-    {{ f.label(class="form-label") }}
-    {{ f(class="form-control" + (" is-invalid" if f.errors else ""), placeholder=placeholder) }}
-    {% for error in f.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
-  </div>
-{% endmacro %}
 
 {% block content %}
 <div class="mx-auto" style="max-width: 680px;">
@@ -31,36 +24,25 @@
         </div>
         <div class="row">
           <div class="col-md-6">
-            <div class="mb-3">
-              {{ form.status.label(class="form-label") }}
-              {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
-              {% for error in form.status.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
-            </div>
+            {{ field(form.status, control_class="form-select") }}
           </div>
           <div class="col-md-6">{{ field(form.contact_person, "e.g. Jane Doe") }}</div>
         </div>
         {{ field(form.job_url, "https://…") }}
 
-        <div class="mb-3">
-          {{ form.notes.label(class="form-label") }}
-          {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows="4", placeholder="Interview dates, recruiter details, anything useful…") }}
-          {% for error in form.notes.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
-        </div>
+        {{ field(form.notes, "Interview dates, recruiter details, anything useful…", rows="4") }}
 
-        <div class="mb-3">
-          {{ form.resume.label(class="form-label") }}
-          {{ form.resume(class="form-control" + (" is-invalid" if form.resume.errors else "")) }}
-          {% for error in form.resume.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        {% call field(form.resume) %}
           {% if job and job.resume_filename %}
             <div class="form-text">
               <i class="bi bi-paperclip"></i>
-              Current: <a href="{{ url_for('jobs.download_resume', id=job.id) }}">resume on file</a>.
+              Current: <a href="{{ url_for('jobs.download_resume', job_id=job.id) }}">resume on file</a>.
               Upload a new file to replace it.
             </div>
           {% else %}
-            <div class="form-text">PDF, DOC, DOCX, RTF or TXT (max 5 MB).</div>
+            <div class="form-text">{{ resume_upload_help }}</div>
           {% endif %}
-        </div>
+        {% endcall %}
 
         <div class="d-flex gap-2">
           {{ form.submit(class="btn btn-primary") }}

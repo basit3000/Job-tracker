@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros/jobs.html" import date_label, delete_button, status_badge %}
 
 {% block title %}My Applications - Job Tracker{% endblock %}
 
@@ -66,27 +67,22 @@
           {% for job in applications %}
           <tr>
             <td>
-              <a href="{{ url_for('jobs.job_detail', id=job.id) }}" class="fw-semibold text-decoration-none">{{ job.job_title }}</a>
+              <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="fw-semibold text-decoration-none">{{ job.job_title }}</a>
               {% if job.location %}<div class="text-muted small">{{ job.location }}</div>{% endif %}
             </td>
             <td>{{ job.company }}</td>
-            <td><span class="badge badge-{{ job.status_slug }}">{{ job.status }}</span></td>
-            <td class="text-muted">{{ job.applied_date.strftime('%b %d, %Y') if job.applied_date else '—' }}</td>
+            <td>{{ status_badge(job.status) }}</td>
+            <td class="text-muted">{{ date_label(job.applied_date) }}</td>
             <td class="text-end text-nowrap">
               {% if job.resume_filename %}
-              <a href="{{ url_for('jobs.download_resume', id=job.id) }}" class="btn btn-outline-secondary btn-sm me-1" title="Download resume">
+              <a href="{{ url_for('jobs.download_resume', job_id=job.id) }}" class="btn btn-outline-secondary btn-sm me-1" title="Download resume">
                 <i class="bi bi-paperclip"></i>
               </a>
               {% endif %}
-              <a href="{{ url_for('jobs.edit_job', id=job.id) }}" class="btn btn-outline-primary btn-sm me-1" title="Edit">
+              <a href="{{ url_for('jobs.edit_job', job_id=job.id) }}" class="btn btn-outline-primary btn-sm me-1" title="Edit">
                 <i class="bi bi-pencil"></i>
               </a>
-              <form action="{{ url_for('jobs.delete_job', id=job.id) }}" method="POST" class="d-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete" onclick="return confirm('Delete this application?');">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </form>
+              {{ delete_button(job.id, compact=true) }}
             </td>
           </tr>
           {% endfor %}

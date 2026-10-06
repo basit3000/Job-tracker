@@ -1,0 +1,27 @@
+{% from "macros/forms.html" import csrf_field %}
+
+{% macro status_badge(status, extra_classes="") -%}
+<span class="badge badge-{{ status|status_slug }}{% if extra_classes %} {{ extra_classes }}{% endif %}">{{ status }}</span>
+{%- endmacro %}
+
+{% macro date_label(value, format="%b %d, %Y") -%}
+{{ value.strftime(format) if value else '—' }}
+{%- endmacro %}
+
+{% macro delete_button(job_id, compact=false) -%}
+<form action="{{ url_for('jobs.delete_job', job_id=job_id) }}" method="POST"{% if compact %} class="d-inline"{% endif %} data-confirm="Delete this application?">
+  {{ csrf_field() }}
+  <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+    <i class="bi bi-trash{% if not compact %} me-1{% endif %}"></i>{% if not compact %}Delete{% endif %}
+  </button>
+</form>
+{%- endmacro %}
+
+{% macro stat_card(value, label, icon) -%}
+<div class="col-6 col-lg-3">
+  <div class="stat-card">
+    <div class="stat-value">{{ value }}</div>
+    <div class="stat-label"><i class="bi bi-{{ icon }} me-1"></i>{{ label }}</div>
+  </div>
+</div>
+{%- endmacro %}
