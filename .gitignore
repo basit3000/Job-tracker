@@ -9,14 +9,54 @@ env/
 *.db
 *.sqlite
 *.sqlite3
+*.db3
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite-*
+*.sqlite3-*
+*.sql
+*.dump
+*.db.gz
+*.sqlite.gz
+*.sqlite3.gz
+*.sql.gz
+*.sql.zip
+*.dump.gz
+*.bak
+*.backup
+*.bkp
+*.rdb
+*.aof
 instance/
+data/
+backups/
+database_backups/
+private/
+secrets/
+credentials/
 
 .env
 .env.*
+*.env
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*service-account*.json
+client_secret*.json
+id_rsa*
+id_ed25519*
+!.env.example
 
 .vscode/
 
 uploads/
-migrations/
+upload/
+.pytest_cache/
+.ruff_cache/
+*.log
+*.log.*
 
 AGENTS.md
