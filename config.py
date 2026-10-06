@@ -21,6 +21,7 @@ class Config:
     PUBLIC_SIGNUP_ENABLED = env_bool("PUBLIC_SIGNUP_ENABLED", default=True)
     GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
     GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    SYNC_ENCRYPTION_KEY = os.environ.get("SYNC_ENCRYPTION_KEY", "")
     GOOGLE_REDIRECT_URI = os.environ.get(
         "GOOGLE_REDIRECT_URI", "http://localhost:5000/auth/google/callback"
     )

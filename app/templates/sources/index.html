@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import csrf_field %}
+{% macro interval_options(selected=0) %}
+  {% for value, label in [(0, 'Manual: Sync now'), (15, 'Every 15 minutes'), (60, 'Every hour')] %}
+  <option value="{{ value }}" {{ 'selected' if selected == value }}>{{ label }}</option>
+  {% endfor %}
+{% endmacro %}
+{% block title %}Connected sources - Job Scout Tracker{% endblock %}
+{% block content %}
+<h2>Connected sources</h2>
+<p class="text-muted">Pull applications from Google Sheets or Notion with your own columns and statuses. Review the first sync, then reuse your mapping.</p>
+<div class="alert alert-info">Sync pulls changes into your tracker. Conflicting tracker edits and deleted tracker jobs are preserved. Removing a source row keeps the tracker job.</div>
+
+{% for connection in connections %}
+<section class="card mb-3">
+  <div class="card-body">
+    <h3 class="h5 text-break">{{ connection.name }}</h3>
+    <p class="text-muted small">
+      {{ 'Notion' if connection.provider == 'notion' else 'Google Sheets' }} ·
+      {{ 'Connected' if connection.active else 'Finish setup' }}
+      {% if connection.reference.get('range') %} · {{ connection.reference.range.a1 }}{% endif %}
+      {% if connection.last_synced_at %} · Last synced {{ connection.last_synced_at|utc_timestamp }}{% endif %}
+    </p>
+    {% if connection.last_error %}<p class="text-danger" role="alert">{{ connection.last_error }}</p>{% endif %}
+    {% if connection.last_result %}
+    <p class="small">Created {{ connection.last_result.created }} · Updated {{ connection.last_result.updated }} · Conflicts preserved {{ connection.last_result.conflicts }} · Invalid {{ connection.last_result.invalid }}</p>
+    {% endif %}
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <form method="POST" action="{{ url_for('sources.read', connection_id=connection.id) }}">
+        {{ csrf_field() }}
+        <button class="btn btn-primary" name="action" value="sync">{{ 'Sync now' if connection.active else 'Finish setup' }}</button>
+        {% if connection.active %}<button class="btn btn-outline-secondary" name="action" value="configure">Review mapping</button>{% endif %}
+        {% if connection.provider == 'google_private' %}<button class="btn btn-outline-secondary" name="action" value="authorize">Reconnect Google</button>{% endif %}
+      </form>
+      <form method="POST" action="{{ url_for('sources.disconnect', connection_id=connection.id) }}">
+        {{ csrf_field() }}
+        <button class="btn btn-outline-danger">Disconnect source</button>
+      </form>
+    </div>
+    <form method="POST" action="{{ url_for('sources.schedule', connection_id=connection.id) }}" class="row g-2 align-items-end">
+      {{ csrf_field() }}
+      <div class="col-sm-7 col-md-5">
+        <label class="form-label" for="interval_{{ connection.id }}">Sync frequency</label>
+        <select class="form-select" name="interval" id="interval_{{ connection.id }}">{{ interval_options(connection.interval_minutes) }}</select>
+      </div>
+      <div class="col-sm-auto"><button class="btn btn-outline-secondary">Save frequency</button></div>
+    </form>
+  </div>
+</section>
+{% else %}
+<p>No connected sources yet.</p>
+{% endfor %}
+
+<section class="card mt-4">
+  <div class="card-body">
+    <h3 class="h5">Connect a source</h3>
+    <form method="POST" action="{{ url_for('sources.create') }}">
+      {{ csrf_field() }}
+      <div class="mb-3">
+        <label class="form-label" for="name">Connection name</label>
+        <input class="form-control" id="name" name="name" maxlength="80" required placeholder="My application tracker">
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="source">Source</label>
+        <select class="form-select" id="source" name="provider">
+          <option value="google_public">Google Sheets shared link</option>
+          {% if config.GOOGLE_LOGIN_ENABLED %}<option value="google_private">Google Sheets private access</option>{% endif %}
+          <option value="notion">Notion database or data source</option>
+        </select>
+      </div>
+      <div class="mb-3" data-import-source="google_public google_private">
+        <label class="form-label" for="sheet_url">Google Sheets link</label>
+        <input class="form-control" type="url" id="sheet_url" name="sheet_url" maxlength="2048" placeholder="https://docs.google.com/spreadsheets/d/.../edit#gid=0">
+        <label class="form-label mt-2" for="cell_range">Cell range (optional)</label>
+        <input class="form-control" id="cell_range" name="cell_range" maxlength="40" placeholder="B4:N200">
+        <p class="form-text">Choose the tab in the share link and include its heading row in the range. Private access asks Google for read-only Sheets access and saves an encrypted credential for later syncs.</p>
+      </div>
+      <div class="mb-3" data-import-source="notion">
+        <label class="form-label" for="notion_kind">Notion source type</label>
+        <select class="form-select" id="notion_kind" name="notion_kind">
+          <option value="database">Database link / ID</option>
+          <option value="data_source">Data source ID</option>
+        </select>
+        <label class="form-label mt-2" for="notion_url">Database link or data source ID</label>
+        <input class="form-control" id="notion_url" name="notion_url" maxlength="2048">
+        <label class="form-label mt-2" for="notion_token">Private Notion connection token</label>
+        <input class="form-control" type="password" id="notion_token" name="notion_token" maxlength="4096" autocomplete="off">
+        <p class="form-text">Create a Notion connection with read access and share this database with it. The token is encrypted on the server and erased when you disconnect.</p>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="interval">Sync frequency</label>
+        <select class="form-select" id="interval" name="interval">{{ interval_options() }}</select>
+        <p class="form-text">Automatic syncing starts after you confirm the first mapping. You can pause it by selecting manual syncing.</p>
+      </div>
+      <button class="btn btn-primary">Connect and review</button>
+    </form>
+  </div>
+</section>
+<p class="form-text mt-3">Prefer a one-time transfer? <a href="{{ url_for('imports.index') }}">Import a file, pasted table, Google Sheet or Notion source.</a></p>
+<script src="{{ url_for('static', filename='js/imports.js') }}" defer></script>
+{% endblock %}

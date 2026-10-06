@@ -5,7 +5,7 @@ services:
       - "127.0.0.1:5000:5000"
     volumes:
       - ./uploads:/app/uploads
-    environment:
+    environment: &tracker_environment
       SECRET_KEY: ${SECRET_KEY:?Set a private random SECRET_KEY in .env}
       DATABASE_URL: postgresql://tracker_runtime:${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}@db:5432/${POSTGRES_DB:-jobtracker}
       MIGRATION_DATABASE_URL: postgresql://tracker_migrator:${MIGRATOR_DB_PASSWORD:?Set MIGRATOR_DB_PASSWORD in .env}@db:5432/${POSTGRES_DB:-jobtracker}
@@ -13,6 +13,7 @@ services:
       PUBLIC_SIGNUP_ENABLED: ${PUBLIC_SIGNUP_ENABLED:-true}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      SYNC_ENCRYPTION_KEY: ${SYNC_ENCRYPTION_KEY:-}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:5000/auth/google/callback}
       ALLOW_INSECURE_LOCAL_API: ${ALLOW_INSECURE_LOCAL_API:-false}
       FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
@@ -22,6 +23,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  source_sync:
+    build: .
+    command: ["flask", "--app", "run.py", "sync-sources", "--watch"]
+    environment:
+      <<: *tracker_environment
+      MIGRATION_DATABASE_URL: ""
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_started
 
   db:
     build:

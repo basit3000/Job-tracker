@@ -102,6 +102,77 @@ class ImportBatch(db.Model):
     payload = db.Column(db.JSON)
     options = db.Column(db.JSON)
     result = db.Column(db.JSON)
+    connection_id = db.Column(
+        db.String(36), db.ForeignKey("source_connection.id"), index=True
+    )
+    connection_version = db.Column(db.Integer)
+
+
+class SourceConnection(db.Model):
+    """A user's selected external source, encrypted credential and mapping."""
+
+    __table_args__ = (
+        db.CheckConstraint("version >= 1", name="ck_source_version"),
+        db.CheckConstraint(
+            "provider IN ('google_public','google_private','notion')",
+            name="ck_source_provider",
+        ),
+        db.CheckConstraint(
+            "interval_minutes IN (0,15,60)", name="ck_source_interval"
+        ),
+    )
+    id = db.Column(db.String(36), primary_key=True, default=public_id)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user.id"), nullable=False, index=True
+    )
+    name = db.Column(db.String(80), nullable=False)
+    provider = db.Column(db.String(20), nullable=False)
+    reference = db.Column(db.JSON, nullable=False)
+    credential_ciphertext = db.Column(db.Text)
+    options = db.Column(db.JSON)
+    columns = db.Column(db.JSON)
+    version = db.Column(
+        db.Integer, nullable=False, default=1, server_default="1"
+    )
+    active = db.Column(
+        db.Boolean, nullable=False, default=False, server_default=db.false()
+    )
+    interval_minutes = db.Column(
+        db.Integer, nullable=False, default=0, server_default="0"
+    )
+    created_at = db.Column(
+        db.DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+    last_synced_at = db.Column(db.DateTime(timezone=True))
+    next_sync_at = db.Column(db.DateTime(timezone=True), index=True)
+    last_result = db.Column(db.JSON)
+    last_error = db.Column(db.String(256))
+
+
+class SourceRecord(db.Model):
+    """Stable external identity and last accepted field values for merging."""
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "connection_id", "source_key", name="uq_source_record"
+        ),
+        db.UniqueConstraint(
+            "connection_id", "application_id", name="uq_source_application"
+        ),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    connection_id = db.Column(
+        db.String(36),
+        db.ForeignKey("source_connection.id"),
+        nullable=False,
+        index=True,
+    )
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    source_key = db.Column(db.String(64), nullable=False)
+    application_id = db.Column(
+        db.Integer, db.ForeignKey("job_application.id"), nullable=False
+    )
+    baseline = db.Column(db.JSON, nullable=False)
 
 
 class JobApplication(db.Model):

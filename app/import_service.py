@@ -23,25 +23,33 @@ from app.models import JOB_STATUSES, ImportBatch, JobApplication, _utcnow
 from app.record_updates import lock_account, write_application
 
 
-def create_batch(user_id, tables):
+def create_batch(user_id, tables, *, connection=None):
     with database_transaction():
         lock_account(user_id)
-        ImportBatch.query.filter_by(user_id=user_id).filter(
-            ImportBatch.expires_at < _utcnow()
-        ).delete(synchronize_session=False)
-        pending = (
-            ImportBatch.query.filter_by(user_id=user_id)
-            .order_by(ImportBatch.created_at.desc())
-            .all()
-        )
-        for old in pending[9:]:
-            db.session.delete(old)
-        batch = ImportBatch(
-            user_id=user_id,
-            payload=tables,
-            expires_at=_utcnow() + timedelta(minutes=30),
-        )
-        db.session.add(batch)
+        batch = new_batch_locked(user_id, tables, connection=connection)
+    return batch
+
+
+def new_batch_locked(user_id, tables, *, connection=None):
+    """Create a preview inside the caller's locked transaction."""
+    ImportBatch.query.filter_by(user_id=user_id).filter(
+        ImportBatch.expires_at < _utcnow()
+    ).delete(synchronize_session=False)
+    pending = (
+        ImportBatch.query.filter_by(user_id=user_id)
+        .order_by(ImportBatch.created_at.desc())
+        .all()
+    )
+    for old in pending[9:]:
+        db.session.delete(old)
+    batch = ImportBatch(
+        user_id=user_id,
+        payload=tables,
+        expires_at=_utcnow() + timedelta(minutes=30),
+        connection_id=connection.id if connection else None,
+        connection_version=connection.version if connection else None,
+    )
+    db.session.add(batch)
     return batch
 
 
@@ -79,7 +87,7 @@ def initial_options(batch, sheet_index=0, header=None):
     header = suggested_header(sheet["rows"]) if header is None else header
     labels, rows = layout(sheet, header)
     mapping = suggested_mapping(labels, rows)
-    return {
+    options = {
         "sheet": sheet_index,
         "header": header,
         "mapping": mapping,
@@ -93,12 +101,21 @@ def initial_options(batch, sheet_index=0, header=None):
         "duplicates": "skip",
         "skip_invalid": False,
     }
+    if batch.connection_id:
+        options["identity_column"] = -1
+    return options
 
 
 def validate_options(batch, options):
     sheet = selected_sheet(batch, options.get("sheet"))
     mapping = options.get("mapping")
     labels, _ = layout(sheet, options.get("header"))
+    if batch.connection_id:
+        if sheet.get("row_ids") and options.get("header") != 1:
+            import_error("Notion properties use header row 1.")
+        column = options.get("identity_column", -1)
+        if type(column) is not int or not -1 <= column < len(labels):
+            import_error("Choose a supported unique ID column.")
     if (
         not isinstance(mapping, list)
         or len(mapping) != len(labels)
@@ -151,6 +168,10 @@ def duplicate_key(title, company, url, applied):
 
 
 def preview(batch, options):
+    if batch.connection_id:
+        from app.source_merge import source_preview
+
+        return source_preview(batch, options)
     validate_options(batch, options)
     known = {
         duplicate_key(*row)
@@ -214,6 +235,10 @@ def commit_batch(user_id, batch_id, digest):
                 "Review the latest preview before importing.",
                 409,
             )
+        if batch.connection_id:
+            from app.source_merge import commit_source_batch_locked
+
+            return commit_source_batch_locked(batch)
         rows, counts = preview(batch, batch.options)
         if counts["invalid"] and not batch.options["skip_invalid"]:
             import_error(
@@ -233,8 +258,12 @@ def commit_batch(user_id, batch_id, digest):
             "invalid": counts["invalid"],
             "duplicates": counts["duplicates"],
         }
-        batch.payload = None
-        batch.options = None
-        batch.result = result
-        batch.expires_at = _utcnow() + timedelta(hours=24)
+        finish_batch(batch, result)
     return result
+
+
+def finish_batch(batch, result):
+    batch.payload = None
+    batch.options = None
+    batch.result = result
+    batch.expires_at = _utcnow() + timedelta(hours=24)

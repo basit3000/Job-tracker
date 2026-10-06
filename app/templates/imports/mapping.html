@@ -3,6 +3,9 @@
 {% block title %}Map import columns - Job Scout Tracker{% endblock %}
 {% block content %}
 <h2>Match your columns</h2>
+{% if batch.connection_id %}
+<div class="alert alert-info">This mapping will be saved for later syncs. Changes are pulled into your tracker. Conflicting tracker edits are preserved.</div>
+{% endif %}
 <p class="text-muted">We suggested fields from column names and sample values. Review them below. Job title and company are required.</p>
 
 <form method="GET" class="card mb-3">
@@ -29,6 +32,23 @@
   {{ csrf_field() }}
   <input type="hidden" name="sheet" value="{{ options.sheet }}">
   <input type="hidden" name="header" value="{{ options.header }}">
+  {% if batch.connection_id and not batch.payload[options.sheet].get('row_ids') %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <label class="form-label" for="identity_column">How to identify the same application on later syncs</label>
+      <select class="form-select" id="identity_column" name="identity_column">
+        <option value="-1" {{ 'selected' if options.get('identity_column', -1) == -1 }}>Match title, company, job link and applied date</option>
+        {% for label in labels %}
+        <option value="{{ loop.index0 }}" {{ 'selected' if options.get('identity_column') == loop.index0 }}>Unique ID: {{ label|truncate(100) }} (column {{ loop.index }})</option>
+        {% endfor %}
+      </select>
+      <p class="form-text">A unique ID column keeps records linked when rows move or titles change. Keep IDs nonempty, unique and unchanged. With the default match, changing a matching field creates a new application.</p>
+    </div>
+  </div>
+  {% elif batch.connection_id %}
+  <input type="hidden" name="identity_column" value="-1">
+  <p class="form-text">Notion pages are identified by their permanent page IDs, even when properties or ordering change.</p>
+  {% endif %}
   <div class="card mb-3">
     <div class="card-body">
       <div class="row g-3">

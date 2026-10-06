@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import csrf_field %}
+{% block title %}Review source sync - Job Scout Tracker{% endblock %}
+{% block content %}
+<h2>Review source sync</h2>
+<p>Create <strong>{{ counts.created }}</strong> · Update <strong>{{ counts.updated }}</strong> · Link existing <strong>{{ counts.linked }}</strong> · Unchanged <strong>{{ counts.unchanged }}</strong></p>
+<p>Conflicts preserved: {{ counts.conflicts }} · Invalid rows: {{ counts.invalid }} · Deleted tracker jobs preserved: {{ counts.deleted }} · Linked jobs absent from source: {{ counts.missing }}</p>
+<div class="alert alert-info">Only mapped fields are synced. When both sides changed a field, your tracker value is kept. Source rows removed later do not delete tracker jobs.</div>
+{% if counts.invalid %}
+<div class="alert alert-warning" role="alert">{{ 'Invalid rows will be skipped, as you selected.' if batch.options.skip_invalid else 'Resolve invalid rows or return to mapping and explicitly choose to skip them.' }}</div>
+{% endif %}
+<p class="form-text">Showing {{ rows|length }} of {{ total }} rows. <a href="{{ url_for('imports.report', batch_id=batch.id) }}">Download the full review CSV.</a></p>
+<div class="table-responsive">
+  <table class="table table-sm import-preview-table">
+    <thead><tr><th>Source row</th><th>Result</th><th>Job title</th><th>Company</th><th>Status</th><th>Applied date</th><th>Issue / preserved fields</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td>{{ row.number }}</td><td>{{ row.decision }}</td>
+        <td class="text-break">{{ row.fields.get('title', '') }}</td>
+        <td class="text-break">{{ row.fields.get('company', '') }}</td>
+        <td>{{ row.fields.get('status') or 'Unmapped' }}</td>
+        <td>{{ row.fields.get('appliedDate') or 'Unknown' }}</td>
+        <td class="text-break">{{ row.error }}{% if row.conflicts %}Local edits preserved: {{ row.conflicts|join(', ') }}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="d-flex flex-wrap gap-2">
+  <form method="POST" action="{{ url_for('imports.confirm', batch_id=batch.id) }}">
+    {{ csrf_field() }}
+    <input type="hidden" name="digest" value="{{ digest }}">
+    <button class="btn btn-primary" {{ 'disabled' if counts.invalid and not batch.options.skip_invalid }}>Confirm sync</button>
+  </form>
+  <a class="btn btn-outline-secondary" href="{{ url_for('imports.mapping', batch_id=batch.id) }}">Adjust mapping</a>
+  <form method="POST" action="{{ url_for('imports.cancel', batch_id=batch.id) }}">
+    {{ csrf_field() }}<button class="btn btn-outline-danger">Cancel preview</button>
+  </form>
+</div>
+<p class="form-text mt-3">The mapping is saved when you confirm. All job changes are saved together; repeated confirmation is safe.</p>
+{% endblock %}

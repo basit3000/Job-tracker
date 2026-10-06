@@ -48,12 +48,15 @@ def require_google_transport():
 def start_google_flow(form):
     require_google_transport()
     link = form.intent.data == "link"
-    sheets = form.intent.data == "sheets"
+    sheets = form.intent.data in {"sheets", "sheet_sync"}
+    syncing = form.intent.data == "sheet_sync"
     if sheets and not current_user.is_authenticated:
         raise GoogleAccountError("Sign in before importing a private sheet.")
     sheet = None
     selection = None
     oauth_options = {}
+    connection_id, connection_version = None, None
+    prompt = "select_account"
     if sheets:
         from app.google_sheets import SHEETS_SCOPE, sheet_reference
         from app.sheet_ranges import sheet_range
@@ -68,6 +71,24 @@ def start_google_flow(form):
             "scope": "openid email " + SHEETS_SCOPE,
             "include_granted_scopes": "true",
         }
+        if syncing:
+            from app.source_connections import get_connection
+
+            connection = get_connection(
+                current_user.id, form.connection_id.data
+            )
+            if connection.provider != "google_private":
+                raise GoogleAccountError(
+                    "Choose a private Google Sheets source."
+                )
+            sheet = connection.reference
+            selection = sheet.get("range")
+            connection_id, connection_version = (
+                connection.id,
+                connection.version,
+            )
+            oauth_options["access_type"] = "offline"
+            prompt = "consent select_account"
     if link and (
         not current_user.is_authenticated
         or not current_user.check_password(form.password.data or "")
@@ -82,7 +103,7 @@ def start_google_flow(form):
         current_app.config["GOOGLE_REDIRECT_URI"],
         state=state,
         nonce=nonce,
-        prompt="select_account",
+        prompt=prompt,
         **oauth_options,
     )
     session[FLOW_KEY] = {
@@ -93,6 +114,8 @@ def start_google_flow(form):
         "user_id": current_user.id if link or sheets else None,
         "sheet": sheet,
         "range": selection,
+        "connection_id": connection_id,
+        "connection_version": connection_version,
         "next": form.next.data if is_safe_redirect(form.next.data) else None,
     }
     return response
@@ -114,7 +137,7 @@ def finish_google_flow():
     if not 0 <= time.time() - flow["started_at"] <= FLOW_LIFETIME:
         clear_google_flow()
         raise GoogleAccountError("Google sign-in expired. Please start again.")
-    if flow["intent"] in {"link", "sheets"} and (
+    if flow["intent"] in {"link", "sheets", "sheet_sync"} and (
         not current_user.is_authenticated or current_user.id != flow["user_id"]
     ):
         clear_google_flow()
@@ -147,6 +170,6 @@ def finish_google_flow():
             raise GoogleAccountError(
                 "Google did not return a verified sign-in."
             )
-        return flow, claims, token.get("access_token")
+        return flow, claims, token
     finally:
         clear_google_flow()

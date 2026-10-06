@@ -24,6 +24,9 @@ factory, blueprints, SQLAlchemy models, Jinja templates, and resume storage.
 - Account-scoped JSON/CSV exports with field selection and CSV formula protection.
 - Reviewed imports from Excel, ODS, CSV/TSV, JSON, pasted tables and Google Sheets,
   with suggested mappings, date/status validation and duplicate detection.
+- Connected Google Sheets and Notion sources with exact cell ranges, custom
+  mappings, stable IDs, conflict-preserving inbound updates and optional polling.
+  See [source sync setup](docs/source-sync.md).
 - Browser-approved device pairing, explicit optional field permissions, immediate
   revocation, and a versioned bearer-authenticated API with OpenAPI schemas.
 - Atomic version checks, idempotent mutations, explicit identity mappings,

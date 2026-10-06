@@ -47,6 +47,7 @@
                 <li><a class="dropdown-item" href="{{ url_for('integrations.index') }}">Job Scout connection</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('exports.index') }}">Export applications</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('imports.index') }}">Import applications</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('sources.index') }}">Connected sources</a></li>
                 <li>
                   <form action="{{ url_for('auth.logout') }}" method="POST">
                     {{ csrf_field() }}

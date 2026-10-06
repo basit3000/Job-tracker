@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Sync complete - Job Scout Tracker{% endblock %}
+{% block content %}
+<h2>Sync complete</h2>
+<div class="alert alert-success" role="status">Created {{ result.created }} applications and updated {{ result.updated }}. Linked {{ result.linked }} existing applications.</div>
+<p>Preserved {{ result.conflicts }} rows with conflicting tracker edits and {{ result.deleted }} deleted tracker jobs. Skipped {{ result.invalid }} invalid rows. {{ result.missing }} linked applications are absent from the source and retained in the tracker.</p>
+<div class="d-flex gap-2">
+  <a class="btn btn-primary" href="{{ url_for('jobs.dashboard') }}">View applications</a>
+  <a class="btn btn-outline-secondary" href="{{ url_for('sources.index') }}">Connected sources</a>
+</div>
+{% endblock %}

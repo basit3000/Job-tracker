@@ -11,6 +11,7 @@ Flask-Migrate==4.0.7
 gunicorn==23.0.0
 psycopg2-binary==2.9.10
 Authlib==1.8.0
+cryptography==50.0.2
 requests==2.34.2
 openpyxl==3.1.5
 xlrd==2.0.2

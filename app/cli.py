@@ -84,6 +84,7 @@ def register_cli(app):
     app.cli.add_command(seed_demo)
     app.cli.add_command(grant_runtime)
     app.cli.add_command(cleanup_imports)
+    app.cli.add_command(sync_sources)
 
 
 @click.command("cleanup-imports")
@@ -122,7 +123,12 @@ def grant_runtime():
                 if table.name in append_only
                 else "SELECT, INSERT, UPDATE"
             )
-            if table.name in {"pairing_request", "import_batch"}:
+            if table.name in {
+                "pairing_request",
+                "import_batch",
+                "source_connection",
+                "source_record",
+            }:
                 privileges += ", DELETE"
             quoted = db.engine.dialect.identifier_preparer.quote(table.name)
             connection.execute(
@@ -141,3 +147,19 @@ def grant_runtime():
         "Runtime table privileges granted. "
         "Schema ownership stays with the migrator."
     )
+
+
+@click.command("sync-sources")
+@click.option("--watch", is_flag=True, help="Keep polling for due sources.")
+@with_appcontext
+def sync_sources(watch):
+    """Pull due connected sources; output contains only aggregate counts."""
+    from app.source_scheduler import run_due_syncs, watch_sources
+
+    if watch:
+        watch_sources(current_app._get_current_object())
+    else:
+        result = run_due_syncs()
+        click.echo(
+            f"Synced {result['synced']} sources; {result['failed']} failed."
+        )

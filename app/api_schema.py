@@ -83,7 +83,9 @@ def _response_schemas(fields):
                 "id": identifier,
                 "status": {"enum": JOB_STATUSES},
                 "fromStatus": {"enum": JOB_STATUSES + [None]},
-                "source": {"enum": ["browser", "device", "import"]},
+                "source": {
+                    "enum": ["browser", "device", "import", "source_sync"]
+                },
                 "installationId": {"type": ["string", "null"]},
                 "sourceEventId": {"type": ["string", "null"]},
                 "occurredAt": nullable_time,
@@ -127,7 +129,13 @@ def _response_schemas(fields):
             {
                 "sequence": {"type": "integer", "minimum": 1},
                 "source": {
-                    "enum": ["browser", "device", "migration", "import"]
+                    "enum": [
+                        "browser",
+                        "device",
+                        "migration",
+                        "import",
+                        "source_sync",
+                    ]
                 },
                 "mutationId": {"type": ["string", "null"]},
                 "application": _ref("Application"),

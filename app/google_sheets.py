@@ -1,5 +1,6 @@
 """Bounded, read-only access to explicitly selected Google spreadsheets."""
 
+import csv
 import json
 import re
 from urllib.parse import parse_qs, quote, urljoin, urlsplit
@@ -140,6 +141,12 @@ def read_public_sheet(reference, selection=None):
             url = target
     except requests.RequestException as error:
         raise google_unavailable() from error
+    except (csv.Error, UnicodeError) as error:
+        raise ServiceError(
+            "import_error",
+            "The selected sheet could not be read. Export it as XLSX.",
+            422,
+        ) from error
     import_error(
         "Google returned too many redirects. Upload an export instead."
     )

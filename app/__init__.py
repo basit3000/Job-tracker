@@ -52,6 +52,7 @@ def create_app(config_object="config.Config"):
     from app.routes.imports import imports
     from app.routes.integrations import integrations
     from app.routes.jobs import jobs
+    from app.routes.sources import sources
 
     login_manager.user_loader(User.from_session_id)
     app.jinja_env.filters["status_slug"] = status_slug
@@ -67,6 +68,7 @@ def create_app(config_object="config.Config"):
     app.register_blueprint(integrations)
     app.register_blueprint(exports)
     app.register_blueprint(imports)
+    app.register_blueprint(sources)
     register_cli(app)
 
     register_error_handlers(app)

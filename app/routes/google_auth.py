@@ -61,11 +61,25 @@ def callback():
     if not current_app.config["GOOGLE_LOGIN_ENABLED"]:
         abort(404)
     try:
-        flow, claims, access_token = finish_google_flow()
+        flow, claims, token = finish_google_flow()
+        if flow["intent"] == "sheet_sync":
+            from app.source_connections import complete_google_connection
+
+            batch = complete_google_connection(
+                current_user.id,
+                flow["connection_id"],
+                flow["connection_version"],
+                token,
+            )
+            destination = (
+                "imports.review" if batch.options else "imports.mapping"
+            )
+            return redirect(url_for(destination, batch_id=batch.id))
         if flow["intent"] == "sheets":
             from app.google_sheets import read_private_sheet
             from app.import_service import create_batch
 
+            access_token = token.get("access_token")
             if not isinstance(access_token, str) or not access_token:
                 raise GoogleAccountError("Google did not grant Sheets access.")
             batch = create_batch(

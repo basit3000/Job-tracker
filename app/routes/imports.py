@@ -142,6 +142,12 @@ def mapped_options(options, labels, rows):
         )
         for value in values
     }
+    if "identity_column" in options:
+        options["identity_column"] = (
+            -1
+            if request.form.get("identity_column", "-1") == "-1"
+            else form_integer("identity_column", 0)
+        )
     return options
 
 
@@ -191,12 +197,20 @@ def mapping_response(batch, options, labels, rows):
 def review(batch_id):
     batch = get_batch(current_user.id, batch_id)
     if batch.result:
-        return render_template("imports/complete.html", result=batch.result)
+        template = (
+            "sources/complete.html"
+            if batch.connection_id
+            else "imports/complete.html"
+        )
+        return render_template(template, result=batch.result)
     if not batch.options:
         return redirect(url_for("imports.mapping", batch_id=batch_id))
     rows, counts = preview(batch, batch.options)
+    template = (
+        "sources/review.html" if batch.connection_id else "imports/review.html"
+    )
     return render_template(
-        "imports/review.html",
+        template,
         batch=batch,
         rows=rows[:100],
         total=len(rows),
@@ -244,7 +258,14 @@ def report(batch_id):
             [
                 row["number"],
                 row["decision"],
-                csv_cell(row["error"]),
+                csv_cell(
+                    row["error"]
+                    or (
+                        "Local edits preserved: " + ", ".join(row["conflicts"])
+                        if row.get("conflicts")
+                        else ""
+                    )
+                ),
                 *[
                     csv_cell(row["fields"].get(name, ""))
                     for name in FIELD_LABELS

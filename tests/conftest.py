@@ -23,6 +23,7 @@ def app_factory(tmp_path):
             "PUBLIC_SIGNUP_ENABLED": True,
             "GOOGLE_CLIENT_ID": "",
             "GOOGLE_CLIENT_SECRET": "",
+            "SYNC_ENCRYPTION_KEY": "",
             "GOOGLE_REDIRECT_URI": "http://localhost:5000/auth/google/callback",
             "ALLOW_INSECURE_LOCAL_API": True,
             "PROPAGATE_EXCEPTIONS": False,
