@@ -86,6 +86,24 @@ class User(UserMixin, db.Model):
         return f"<User {self.email}>"
 
 
+class ImportBatch(db.Model):
+    """Short-lived private previews and replay-safe import receipts."""
+
+    id = db.Column(db.String(36), primary_key=True, default=public_id)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user.id"), nullable=False, index=True
+    )
+    created_at = db.Column(
+        db.DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+    expires_at = db.Column(
+        db.DateTime(timezone=True), nullable=False, index=True
+    )
+    payload = db.Column(db.JSON)
+    options = db.Column(db.JSON)
+    result = db.Column(db.JSON)
+
+
 class JobApplication(db.Model):
     __table_args__ = (
         db.CheckConstraint("version >= 1", name="ck_job_version"),

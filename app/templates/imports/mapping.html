@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import csrf_field %}
+{% block title %}Map import columns - Job Scout Tracker{% endblock %}
+{% block content %}
+<h2>Match your columns</h2><p class="text-muted">We suggested fields from column names and sample values. Review them below. Job title and company are required.</p>
+<form method="GET" class="card mb-3"><div class="card-body row g-3">
+  <div class="col-md-5"><label class="form-label" for="sheet">Workbook tab</label><select class="form-select" id="sheet" name="sheet">{% for sheet in batch.payload %}<option value="{{ loop.index0 }}" {{ 'selected' if options.sheet == loop.index0 }}>{{ sheet.name }}</option>{% endfor %}</select></div>
+  <div class="col-md-4"><label class="form-label" for="header">Header row (0 = no header)</label><input class="form-control" type="number" id="header" name="header" min="0" max="30" value="{{ options.header }}"></div>
+  <div class="col-md-3 align-self-end"><button class="btn btn-outline-primary">Use tab and header</button></div>
+</div></form>
+<form method="POST">
+  {{ csrf_field() }}<input type="hidden" name="sheet" value="{{ options.sheet }}"><input type="hidden" name="header" value="{{ options.header }}">
+  <div class="card mb-3"><div class="card-body"><div class="row g-3">
+    {% for label in labels %}{% set column = loop.index0 %}<div class="col-md-6 col-lg-4"><label class="form-label text-break" for="column_{{ column }}">{{ label|truncate(200) }} <span class="text-muted small">(column {{ loop.index }})</span></label>
+      <select class="form-select" name="column_{{ column }}" id="column_{{ column }}"><option value="">Ignore column</option>{% for name, title in fields.items() %}<option value="{{ name }}" {{ 'selected' if options.mapping[column] == name }}>{{ title }}</option>{% endfor %}</select>
+    </div>{% endfor %}
+  </div></div></div>
+  <div class="card mb-3"><div class="card-body"><h3 class="h5">Dates, statuses and duplicates</h3><div class="row g-3">
+    <div class="col-md-4"><label for="date_order" class="form-label">Numeric dates</label><select id="date_order" name="date_order" class="form-select">{% for value, label in [('auto', 'Detect; flag ambiguous dates'), ('dmy', 'Day / month / year'), ('mdy', 'Month / day / year')] %}<option value="{{ value }}" {{ 'selected' if options.date_order == value }}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label for="default_status" class="form-label">Status for empty cells</label><select id="default_status" name="default_status" class="form-select">{% for status in statuses %}<option value="{{ status }}" {{ 'selected' if options.default_status == status }}>{{ status.title() }}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label for="duplicates" class="form-label">Matching applications</label><select id="duplicates" name="duplicates" class="form-select"><option value="skip" {{ 'selected' if options.duplicates == 'skip' }}>Skip likely duplicates</option><option value="allow" {{ 'selected' if options.duplicates == 'allow' }}>Import as separate applications</option></select></div>
+  </div>
+  <p class="form-text">Matches use company, title, job link and applied date within your account. Imports add applications; they preserve existing records. Missing dates stay unknown.</p>
+  <div class="row g-3 mb-3">{% for value in status_values %}<div class="col-md-6"><label class="form-label text-break" for="status_{{ normalized(value) }}">Your status: {{ value|truncate(150) }}</label><select class="form-select" name="status_{{ normalized(value) }}" id="status_{{ normalized(value) }}"><option value="">Choose a tracker status</option>{% for status in statuses %}<option value="{{ status }}" {{ 'selected' if options.status_map.get(normalized(value), suggested_status(value)) == status }}>{{ status.title() }}</option>{% endfor %}</select></div>{% endfor %}</div>
+  <button class="btn btn-outline-secondary btn-sm mb-3" name="action" value="refresh">Update status choices after remapping</button>
+  <div class="form-check"><input class="form-check-input" type="checkbox" id="preserve" name="preserve" value="yes" {{ 'checked' if options.preserve }}><label class="form-check-label" for="preserve">Keep ignored columns in each application's notes</label></div>
+  <div class="form-check"><input class="form-check-input" type="checkbox" id="skip_invalid" name="skip_invalid" value="yes" {{ 'checked' if options.skip_invalid }}><label class="form-check-label" for="skip_invalid">Skip invalid rows and import the valid rows</label></div>
+  </div></div>
+  <details class="mb-3"><summary>First five source rows</summary><div class="table-responsive"><table class="table table-sm"><thead><tr><th>Source row</th>{% for label in labels %}<th>{{ label|truncate(100) }}</th>{% endfor %}</tr></thead><tbody>{% for number, row in sample %}<tr><td>{{ number }}</td>{% for cell in row %}<td class="text-break">{{ cell|truncate(160) }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div></details>
+  <div class="d-flex gap-2"><button class="btn btn-primary" name="action" value="preview">Preview import</button><button class="btn btn-outline-secondary" type="submit" formaction="{{ url_for('imports.cancel', batch_id=batch.id) }}">Cancel import</button></div>
+</form>
+{% endblock %}

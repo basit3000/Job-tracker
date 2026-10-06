@@ -126,7 +126,9 @@ def _response_schemas(fields):
         "FeedEntry": _object(
             {
                 "sequence": {"type": "integer", "minimum": 1},
-                "source": {"enum": ["browser", "device", "migration"]},
+                "source": {
+                    "enum": ["browser", "device", "migration", "import"]
+                },
                 "mutationId": {"type": ["string", "null"]},
                 "application": _ref("Application"),
             },

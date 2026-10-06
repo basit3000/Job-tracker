@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import csrf_field %}
+{% block title %}Review import - Job Scout Tracker{% endblock %}
+{% block content %}
+<h2>Review your import</h2><p>Ready: <strong>{{ counts.ready }}</strong> · Duplicate rows skipped: <strong>{{ counts.duplicates }}</strong> · Invalid rows: <strong>{{ counts.invalid }}</strong></p>
+{% if counts.invalid %}<div class="alert alert-warning" role="alert">{{ 'Invalid rows will be skipped, as you selected.' if batch.options.skip_invalid else 'Resolve invalid rows or return to mapping and explicitly choose to skip them.' }}</div>{% endif %}
+<p class="form-text">Showing {{ rows|length }} of {{ total }} rows. <a href="{{ url_for('imports.report', batch_id=batch.id) }}">Download the full review CSV</a> to inspect every row.</p>
+<div class="table-responsive"><table class="table table-sm import-preview-table"><thead><tr><th>Source row</th><th>Result</th><th>Job title</th><th>Company</th><th>Status</th><th>Applied date</th><th>Issue</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ row.number }}</td><td>{{ row.decision }}</td><td class="text-break">{{ row.fields.get('title', '') }}</td><td class="text-break">{{ row.fields.get('company', '') }}</td><td>{{ row.fields.get('status', '') }}</td><td>{{ row.fields.get('appliedDate') or 'Unknown' }}</td><td class="text-break">{{ row.error }}</td></tr>{% endfor %}</tbody></table></div>
+<div class="d-flex flex-wrap gap-2">
+  <form action="{{ url_for('imports.confirm', batch_id=batch.id) }}" method="POST">{{ csrf_field() }}<input type="hidden" name="digest" value="{{ digest }}"><button class="btn btn-primary" {{ 'disabled' if not counts.ready or (counts.invalid and not batch.options.skip_invalid) }}>Import {{ counts.ready }} applications</button></form>
+  <a class="btn btn-outline-secondary" href="{{ url_for('imports.mapping', batch_id=batch.id) }}">Adjust mapping</a>
+  <form action="{{ url_for('imports.cancel', batch_id=batch.id) }}" method="POST">{{ csrf_field() }}<button class="btn btn-outline-danger">Cancel import</button></form>
+</div><p class="form-text mt-3">Your changes are saved together. Repeated confirmation cannot add the same preview twice.</p>
+{% endblock %}

@@ -75,7 +75,9 @@ URI from the worker environment, and starts Gunicorn with `DATABASE_URL` pointin
 to `tracker_runtime`. The runtime cannot alter the schema or Alembic version table.
 Events, feed snapshots, mutation receipts and mappings receive SELECT/INSERT only.
 Mutable application/account/device tables receive SELECT/INSERT/UPDATE; expired
-pairing intents also permit DELETE. Sequence usage allows ordinary inserts.
+pairing intents and private import previews also permit DELETE. Sequence usage
+allows ordinary inserts. See [import setup and cleanup](importing.md) for the
+preview migration and scheduled expiry cleanup.
 
 **Existing database volumes need an administrator-led role transition.** The
 official PostgreSQL image runs init scripts only for an empty data directory.

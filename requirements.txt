@@ -12,3 +12,6 @@ gunicorn==23.0.0
 psycopg2-binary==2.9.10
 Authlib==1.8.0
 requests==2.34.2
+openpyxl==3.1.5
+xlrd==2.0.2
+defusedxml==0.7.1

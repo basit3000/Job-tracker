@@ -83,6 +83,17 @@ def register_cli(app):
     app.cli.add_command(create_user)
     app.cli.add_command(seed_demo)
     app.cli.add_command(grant_runtime)
+    app.cli.add_command(cleanup_imports)
+
+
+@click.command("cleanup-imports")
+@with_appcontext
+def cleanup_imports():
+    """Remove expired private import previews and completion receipts."""
+    from app.import_service import cleanup_imports as cleanup
+
+    count = cleanup()
+    click.echo(f"Removed {count} expired import previews/receipts.")
 
 
 @click.command("grant-runtime")
@@ -111,7 +122,7 @@ def grant_runtime():
                 if table.name in append_only
                 else "SELECT, INSERT, UPDATE"
             )
-            if table.name == "pairing_request":
+            if table.name in {"pairing_request", "import_batch"}:
                 privileges += ", DELETE"
             quoted = db.engine.dialect.identifier_preparer.quote(table.name)
             connection.execute(

@@ -109,9 +109,12 @@ class LoginForm(AccountForm):
 class GoogleLoginForm(FlaskForm):
     intent = HiddenField(
         default="signin",
-        validators=[DataRequired(), AnyOf(["signin", "link"])],
+        validators=[DataRequired(), AnyOf(["signin", "link", "sheets"])],
     )
     next = HiddenField(validators=[Optional(), Length(max=2048)])
+    sheet_url = StringField(
+        "Google Sheets link", validators=[Optional(), Length(max=2048)]
+    )
     password = PasswordField(
         "Current password",
         validators=[Optional(), Length(max=PASSWORD_MAX_LENGTH)],

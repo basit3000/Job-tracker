@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import csrf_field %}
+{% block title %}Import applications - Job Scout Tracker{% endblock %}
+{% block content %}
+<h2>Import applications</h2>
+<p class="text-muted">Bring your existing tracker with you. Choose a source, check the suggested columns, and preview before saving.</p>
+<section class="card"><div class="card-body">
+<form method="POST" enctype="multipart/form-data">
+  {{ csrf_field() }}
+  <div class="mb-3"><label class="form-label" for="source">Import from</label>
+    <select class="form-select" id="source" name="source">
+      <option value="file" {{ 'selected' if request.form.get('source', 'file') == 'file' }}>Upload a file</option>
+      <option value="paste" {{ 'selected' if request.form.get('source') == 'paste' }}>Paste a table</option>
+      <option value="public" {{ 'selected' if request.form.get('source') == 'public' }}>Google Sheets shared link</option>
+      {% if config.GOOGLE_LOGIN_ENABLED %}<option value="private" {{ 'selected' if request.form.get('source') == 'private' }}>Google Sheets private access</option>{% endif %}
+    </select>
+  </div>
+  <div class="mb-3" data-import-source="file"><label for="file" class="form-label">Spreadsheet or data file</label>
+    <input id="file" name="file" class="form-control" type="file" accept=".xlsx,.xls,.ods,.csv,.tsv,.txt,.json,.jsonl,.ndjson">
+    <p class="form-text">XLSX, XLS, ODS, CSV, TSV, TXT, JSON, or JSONL. Up to 5 MB and 1,000 data rows per sheet. You can choose a workbook tab next.</p>
+  </div>
+  <div class="mb-3" data-import-source="paste"><label for="text" class="form-label">Paste table rows</label>
+    <textarea id="text" name="text" class="form-control" rows="8" placeholder="Copy cells from Google Sheets, Excel, or another table, including column headings.">{{ request.form.get('text', '') }}</textarea>
+  </div>
+  <div class="mb-3" data-import-source="public private"><label for="sheet_url" class="form-label">Google Sheets link</label>
+    <input id="sheet_url" name="sheet_url" class="form-control" type="url" maxlength="2048" placeholder="https://docs.google.com/spreadsheets/d/.../edit" value="{{ request.form.get('sheet_url', '') }}">
+    <p class="form-text">Shared links read the linked tab. Private access asks Google for read-only Sheets access once for this import. You can also keep sharing private and upload a downloaded file.</p>
+  </div>
+  {% if not config.GOOGLE_LOGIN_ENABLED %}<p class="form-text">Private Google authorization needs the platform's Google OAuth configuration. File uploads and pasted Google Sheets cells work immediately.</p>{% endif %}
+  <button class="btn btn-primary" type="submit">Read source</button>
+</form>
+</div></section>
+<p class="form-text mt-3">Nothing is added until you confirm the preview. Column suggestions run locally on this server. Previews are available for 30 minutes. Source data is cleared when you confirm or cancel; expired previews are removed during cleanup.</p>
+<script src="{{ url_for('static', filename='js/imports.js') }}" defer></script>
+{% endblock %}

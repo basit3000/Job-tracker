@@ -244,6 +244,9 @@ h2 { font-size: 1.5rem; }
 }
 .table tbody tr { transition: background-color 0.1s; }
 .table tbody tr:hover { background-color: #f1f5f9; }
+.import-preview-table { min-width: 850px; }
+.import-preview-table td { vertical-align: top; }
+.import-preview-table td:last-child { min-width: 220px; max-width: 320px; }
 
 /* ── Status Badges ── */
 .badge {

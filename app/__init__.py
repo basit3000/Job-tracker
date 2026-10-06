@@ -49,6 +49,7 @@ def create_app(config_object="config.Config"):
     from app.routes.api import api
     from app.routes.auth import auth, main
     from app.routes.google_auth import google_auth
+    from app.routes.imports import imports
     from app.routes.integrations import integrations
     from app.routes.jobs import jobs
 
@@ -65,6 +66,7 @@ def create_app(config_object="config.Config"):
     app.register_blueprint(api)
     app.register_blueprint(integrations)
     app.register_blueprint(exports)
+    app.register_blueprint(imports)
     register_cli(app)
 
     register_error_handlers(app)

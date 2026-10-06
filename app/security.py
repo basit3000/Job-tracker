@@ -59,6 +59,7 @@ def register_security_headers(app):
             "auth.register",
             "google_auth.account",
             "google_auth.start",
+            "imports.index",
         }:
             # Chromium also applies form-action to a POST's redirects.
             response.headers["Content-Security-Policy"] = SECURITY_HEADERS[

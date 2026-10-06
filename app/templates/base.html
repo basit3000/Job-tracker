@@ -46,6 +46,7 @@
                 <li><a class="dropdown-item" href="{{ url_for('google_auth.account') }}">Account settings</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('integrations.index') }}">Job Scout connection</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('exports.index') }}">Export applications</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('imports.index') }}">Import applications</a></li>
                 <li>
                   <form action="{{ url_for('auth.logout') }}" method="POST">
                     {{ csrf_field() }}

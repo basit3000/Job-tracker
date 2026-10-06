@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Import complete - Job Scout Tracker{% endblock %}
+{% block content %}
+<h2>Import complete</h2><div class="alert alert-success" role="status">Imported {{ result.imported }} applications. Skipped {{ result.duplicates }} duplicates and {{ result.invalid }} invalid rows.</div>
+<p>Your original records are preserved. The temporary source data has been cleared.</p><a class="btn btn-primary" href="{{ url_for('jobs.job_list') }}">View applications</a> <a class="btn btn-outline-secondary" href="{{ url_for('imports.index') }}">Import another source</a>
+{% endblock %}

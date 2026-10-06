@@ -1,6 +1,5 @@
 """Google sign-in and explicit linking; all starts are CSRF-protected POSTs."""
 
-from authlib.common.errors import AuthlibBaseError
 from flask import (
     Blueprint,
     abort,
@@ -11,13 +10,13 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
-from joserfc.errors import JoseError
-from requests import RequestException
 
+from app.contracts import ServiceError
 from app.extensions import limiter
 from app.forms import GoogleLoginForm
 from app.google_accounts import GoogleAccountError, connect_google, google_user
 from app.google_login import (
+    PROVIDER_ERRORS,
     clear_google_flow,
     finish_google_flow,
     start_google_flow,
@@ -26,7 +25,6 @@ from app.routes.auth import finish_login
 from app.security import AUTH_RATE_LIMIT
 
 google_auth = Blueprint("google_auth", __name__)
-PROVIDER_ERRORS = (AuthlibBaseError, JoseError, RequestException)
 
 
 @google_auth.get("/account")
@@ -63,7 +61,18 @@ def callback():
     if not current_app.config["GOOGLE_LOGIN_ENABLED"]:
         abort(404)
     try:
-        flow, claims = finish_google_flow()
+        flow, claims, access_token = finish_google_flow()
+        if flow["intent"] == "sheets":
+            from app.google_sheets import read_private_sheet
+            from app.import_service import create_batch
+
+            if not isinstance(access_token, str) or not access_token:
+                raise GoogleAccountError("Google did not grant Sheets access.")
+            batch = create_batch(
+                current_user.id,
+                read_private_sheet(flow["sheet"], access_token),
+            )
+            return redirect(url_for("imports.mapping", batch_id=batch.id))
         if flow["intent"] == "link":
             user = connect_google(current_user, claims)
             return finish_login(
@@ -77,6 +86,9 @@ def callback():
         return finish_login(user, flow["next"])
     except GoogleAccountError as error:
         return sign_in_error(str(error))
+    except ServiceError as error:
+        flash(str(error), "danger")
+        return redirect(url_for("imports.index"))
     except PROVIDER_ERRORS:
         # Provider descriptions can contain codes, tokens, or personal data.
         return sign_in_error(

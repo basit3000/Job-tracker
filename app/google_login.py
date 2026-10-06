@@ -4,14 +4,18 @@ import secrets
 import time
 from urllib.parse import urlsplit
 
+from authlib.common.errors import AuthlibBaseError
 from flask import current_app, request, session
 from flask_login import current_user
+from joserfc.errors import JoseError
+from requests import RequestException
 
 from app.google_accounts import GoogleAccountError
 from app.utils import is_safe_redirect
 
 FLOW_KEY = "_google_flow"
 FLOW_LIFETIME = 600
+PROVIDER_ERRORS = (AuthlibBaseError, JoseError, RequestException)
 
 
 def google_client():
@@ -44,6 +48,23 @@ def require_google_transport():
 def start_google_flow(form):
     require_google_transport()
     link = form.intent.data == "link"
+    sheets = form.intent.data == "sheets"
+    if sheets and not current_user.is_authenticated:
+        raise GoogleAccountError("Sign in before importing a private sheet.")
+    sheet = None
+    oauth_options = {}
+    if sheets:
+        from app.google_sheets import SHEETS_SCOPE, sheet_reference
+
+        sheet = sheet_reference(form.sheet_url.data or "")
+        if sheet["published"]:
+            raise GoogleAccountError(
+                "Use the normal share URL for private sheet access."
+            )
+        oauth_options = {
+            "scope": "openid email " + SHEETS_SCOPE,
+            "include_granted_scopes": "true",
+        }
     if link and (
         not current_user.is_authenticated
         or not current_user.check_password(form.password.data or "")
@@ -59,13 +80,15 @@ def start_google_flow(form):
         state=state,
         nonce=nonce,
         prompt="select_account",
+        **oauth_options,
     )
     session[FLOW_KEY] = {
         "state": state,
         "nonce": nonce,
         "started_at": time.time(),
         "intent": form.intent.data,
-        "user_id": current_user.id if link else None,
+        "user_id": current_user.id if link or sheets else None,
+        "sheet": sheet,
         "next": form.next.data if is_safe_redirect(form.next.data) else None,
     }
     return response
@@ -87,7 +110,7 @@ def finish_google_flow():
     if not 0 <= time.time() - flow["started_at"] <= FLOW_LIFETIME:
         clear_google_flow()
         raise GoogleAccountError("Google sign-in expired. Please start again.")
-    if flow["intent"] == "link" and (
+    if flow["intent"] in {"link", "sheets"} and (
         not current_user.is_authenticated or current_user.id != flow["user_id"]
     ):
         clear_google_flow()
@@ -120,6 +143,6 @@ def finish_google_flow():
             raise GoogleAccountError(
                 "Google did not return a verified sign-in."
             )
-        return flow, claims
+        return flow, claims, token.get("access_token")
     finally:
         clear_google_flow()

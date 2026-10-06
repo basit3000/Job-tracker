@@ -22,6 +22,8 @@ factory, blueprints, SQLAlchemy models, Jinja templates, and resume storage.
 - Optional public posting/applicant observations with source and observation
   time; unknown counts remain unknown.
 - Account-scoped JSON/CSV exports with field selection and CSV formula protection.
+- Reviewed imports from Excel, ODS, CSV/TSV, JSON, pasted tables and Google Sheets,
+  with suggested mappings, date/status validation and duplicate detection.
 - Browser-approved device pairing, explicit optional field permissions, immediate
   revocation, and a versioned bearer-authenticated API with OpenAPI schemas.
 - Atomic version checks, idempotent mutations, explicit identity mappings,
@@ -128,6 +130,11 @@ Follow [the Google login setup guide](docs/google-login.md) for Cloud Console
 steps, local testing, HTTPS deployment, and connecting an existing account.
 
 ## API and reference client
+
+Import an existing tracker from the account menu's **Import applications** entry.
+See [the import guide](docs/importing.md) for supported formats, smart mapping,
+private Google Sheets authorization and preview cleanup. Apply migration
+`f70a93bd2158` when updating an existing database.
 
 The public schema is served at `/api/v1/openapi.json`. All tracker API data
 requires a device credential, independently of browser cookies. Pairing requires
