@@ -1,0 +1,20 @@
+[
+  {
+    "id": "manual:application:11111111-1111-4111-8111-111111111111",
+    "title": "Fictional Platform Engineer",
+    "company": "Example Company",
+    "url": "https://example.com/jobs/platform",
+    "board": "example",
+    "location": "Remote",
+    "decision": "applied",
+    "appliedDate": null,
+    "followUpDate": "2026-12-01",
+    "note": "Fictional private note excluded from default sync",
+    "salary": "Fictional salary excluded from default sync",
+    "contactEmail": "recruiter@example.com",
+    "statusHistory": [
+      {"from": null, "to": "shortlisted", "at": "2026-10-01T10:00:00Z"},
+      {"from": "shortlisted", "to": "applied", "at": "2026-10-02T10:00:00Z"}
+    ]
+  }
+]
