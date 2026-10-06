@@ -66,12 +66,16 @@ def get_batch(user_id, batch_id):
     return batch
 
 
-def initial_options(batch, sheet_index=0, header=None):
+def selected_sheet(batch, sheet_index):
     if type(sheet_index) is not int or not 0 <= sheet_index < len(
         batch.payload
     ):
         import_error("Choose an available sheet.")
-    sheet = batch.payload[sheet_index]
+    return batch.payload[sheet_index]
+
+
+def initial_options(batch, sheet_index=0, header=None):
+    sheet = selected_sheet(batch, sheet_index)
     header = suggested_header(sheet["rows"]) if header is None else header
     labels, rows = layout(sheet, header)
     mapping = suggested_mapping(labels, rows)
@@ -92,9 +96,9 @@ def initial_options(batch, sheet_index=0, header=None):
 
 
 def validate_options(batch, options):
-    initial_options(batch, options.get("sheet"), options.get("header"))
+    sheet = selected_sheet(batch, options.get("sheet"))
     mapping = options.get("mapping")
-    labels, _ = layout(batch.payload[options["sheet"]], options["header"])
+    labels, _ = layout(sheet, options.get("header"))
     if (
         not isinstance(mapping, list)
         or len(mapping) != len(labels)
@@ -173,8 +177,7 @@ def preview(batch, options):
             fields.get("url"),
             fields.get("appliedDate"),
         )
-        entry["duplicate"] = key in known
-        if entry["duplicate"] and options["duplicates"] == "skip":
+        if key in known and options["duplicates"] == "skip":
             counts["duplicates"] += 1
             entry["decision"] = "Skip duplicate"
         else:
@@ -185,7 +188,7 @@ def preview(batch, options):
 
 
 def save_options(batch, options):
-    preview(batch, options)
+    validate_options(batch, options)
     with database_transaction():
         lock_account(batch.user_id)
         db.session.refresh(batch)

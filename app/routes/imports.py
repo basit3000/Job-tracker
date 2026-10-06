@@ -200,7 +200,6 @@ def confirm(batch_id):
         if error.status in {404, 410}:
             raise
         flash(str(error), "danger")
-        return redirect(url_for("imports.review", batch_id=batch_id))
     return redirect(url_for("imports.review", batch_id=batch_id))
 
 

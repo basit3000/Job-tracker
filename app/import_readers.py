@@ -3,6 +3,7 @@
 import csv
 import io
 import json
+from contextlib import closing, contextmanager
 from datetime import date, datetime
 from pathlib import PurePath
 from xml.etree.ElementTree import ParseError
@@ -10,7 +11,6 @@ from zipfile import BadZipFile, ZipFile
 
 import openpyxl
 import xlrd
-from defusedxml.common import DefusedXmlException
 from defusedxml.ElementTree import fromstring
 
 from app.contracts import ServiceError
@@ -136,32 +136,33 @@ def read_json(data, *, lines=False):
     ]
 
 
+@contextmanager
 def checked_archive(data):
-    archive = ZipFile(io.BytesIO(data))
-    entries = archive.infolist()
-    if (
-        len(entries) > 1000
-        or sum(entry.file_size for entry in entries) > MAX_EXPANDED_BYTES
-    ):
-        archive.close()
-        import_error("This workbook expands beyond the safe import limit.")
-    try:
+    with ZipFile(io.BytesIO(data)) as archive:
+        entries = archive.infolist()
+        if (
+            len(entries) > 1000
+            or sum(entry.file_size for entry in entries) > MAX_EXPANDED_BYTES
+        ):
+            import_error("This workbook expands beyond the safe import limit.")
         for entry in entries:
             if entry.filename.endswith((".xml", ".rels")):
                 fromstring(archive.read(entry), forbid_dtd=True)
-    except Exception:
-        archive.close()
-        raise
-    return archive
+        yield archive
 
 
 def read_xlsx(data):
-    with checked_archive(data):
-        pass
-    book = openpyxl.load_workbook(
-        io.BytesIO(data), read_only=True, data_only=True, keep_links=False
-    )
-    try:
+    with (
+        checked_archive(data),
+        closing(
+            openpyxl.load_workbook(
+                io.BytesIO(data),
+                read_only=True,
+                data_only=True,
+                keep_links=False,
+            )
+        ) as book,
+    ):
         if len(book.worksheets) > MAX_TABLES:
             import_error("Use at most 10 sheets per workbook.")
         result = []
@@ -171,8 +172,6 @@ def read_xlsx(data):
                 table(sheet.title, sheet.iter_rows(values_only=True))
             )
         return result
-    finally:
-        book.close()
 
 
 def read_xls(data):
@@ -262,13 +261,10 @@ def read_file(data, filename):
         ValueError,
         KeyError,
         csv.Error,
-        UnicodeError,
         BadZipFile,
-        DefusedXmlException,
         xlrd.XLRDError,
         OSError,
         ParseError,
-        RecursionError,
         RuntimeError,
     ) as error:
         raise ServiceError(

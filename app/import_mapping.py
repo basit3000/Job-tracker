@@ -26,42 +26,42 @@ FIELD_LABELS = {
 }
 ALIASES = {
     "title": (
-        "title|job title|job_title|position|role|job role|position "
-        "title|designation|stelle|poste"
+        "title|job title|job_title|position|role|job role|"
+        "position title|designation|stelle|poste"
     ),
     "company": (
-        "company|company name|employer|organization|organisation|busi"
-        "ness|unternehmen|entreprise"
+        "company|company name|employer|organization|organisation|"
+        "business|unternehmen|entreprise"
     ),
     "url": (
-        "url|job_url|job link|job url|posting url|application "
-        "link|link|job posting|posting link"
+        "url|job_url|job link|job url|posting url|application link|"
+        "link|job posting|posting link"
     ),
     "location": "location|city|place|office|work location|standort",
     "status": (
-        "status|application status|stage|application "
-        "stage|progress|outcome|pipeline"
+        "status|application status|stage|application stage|"
+        "progress|outcome|pipeline"
     ),
     "appliedDate": (
-        "appliedDate|applied_on|applied on|applied date|date "
-        "applied|application date|application sent|submitted on"
+        "appliedDate|applied_on|applied on|applied date|date applied|"
+        "application date|application sent|submitted on"
     ),
     "followUpDate": (
-        "followUpDate|follow_up_on|follow up|follow-up date|follow up"
-        " on|next follow up|reminder date"
+        "followUpDate|follow_up_on|follow up|follow-up date|"
+        "follow up on|next follow up|reminder date"
     ),
     "board": "board|source|job board|platform|found on|job source",
     "salary": "salary|salary range|pay|compensation|package",
     "contactName": (
-        "contactName|contact_person|contact "
-        "person|contact|recruiter|recruiter name|hiring manager"
+        "contactName|contact_person|contact person|contact|"
+        "recruiter|recruiter name|hiring manager"
     ),
     "contactEmail": (
         "contactEmail|contact_email|contact email|recruiter email|email|e-mail"
     ),
     "contactPhone": (
-        "contactPhone|contact_phone|phone|phone number|recruiter "
-        "phone|telephone"
+        "contactPhone|contact_phone|phone|phone number|"
+        "recruiter phone|telephone"
     ),
     "note": "note|notes|comments|comment|remarks|details|description",
 }
@@ -73,9 +73,8 @@ STATUS_ALIASES = {
         "application sent|submitted|application submitted|in progress|pending"
     ),
     "interviewing": (
-        "interview|interview scheduled|phone "
-        "screen|screening|assessment|technical interview|final "
-        "interview"
+        "interview|interview scheduled|phone screen|screening|"
+        "assessment|technical interview|final interview"
     ),
     "offer": "offer received|offered|job offer",
     "accepted": "offer accepted|hired|joined",
@@ -90,15 +89,25 @@ def normalized(value):
     return "".join(char for char in value if char.isalnum())
 
 
+_HEADER_ALIASES = {
+    field: {normalized(alias) for alias in aliases.split("|")}
+    for field, aliases in ALIASES.items()
+}
+_STATUS_LOOKUP = {
+    normalized(alias): status
+    for status in JOB_STATUSES
+    for alias in [status, *STATUS_ALIASES[status].split("|")]
+}
+
+
 def header_match(value):
     key = normalized(str(value)[:128])
     if not key:
         return "", 0
     scored = []
-    for field, aliases in ALIASES.items():
+    for field, aliases in _HEADER_ALIASES.items():
         score = max(
-            SequenceMatcher(None, key, normalized(alias)).ratio()
-            for alias in aliases.split("|")
+            SequenceMatcher(None, key, alias).ratio() for alias in aliases
         )
         scored.append((score, field))
     scored.sort(reverse=True)
@@ -116,7 +125,8 @@ def suggested_header(rows):
         matches = {header_match(value)[0] for value in row} - {""}
         score = len(matches) + (5 if {"title", "company"} <= matches else 0)
         scores.append((score, -index))
-    return -max(scores)[1] + 1 if max(scores)[0] >= 2 else 1
+    score, negative_index = max(scores)
+    return -negative_index + 1 if score >= 2 else 1
 
 
 def layout(sheet, header):
@@ -141,10 +151,10 @@ def layout(sheet, header):
 
 def suggested_mapping(labels, rows):
     mapping = [""] * len(labels)
-    candidates = [
-        (header_match(label)[1], index, header_match(label)[0])
-        for index, label in enumerate(labels)
-    ]
+    candidates = []
+    for index, label in enumerate(labels):
+        field, score = header_match(label)
+        candidates.append((score, index, field))
     used = set()
     for _score, index, field in sorted(candidates, reverse=True):
         if field and field not in used:
@@ -159,32 +169,23 @@ def suggested_mapping(labels, rows):
         ]
         if len(values) < 2:
             continue
-        inferred = (
-            "url"
-            if all(
-                value.startswith(("https://", "http://")) for value in values
-            )
-            else "contactEmail"
-            if all(
-                re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value)
-                for value in values
-            )
-            else ""
-        )
-        if inferred and inferred not in used:
+        if all(value.startswith(("https://", "http://")) for value in values):
+            inferred = "url"
+        elif all(
+            re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value)
+            for value in values
+        ):
+            inferred = "contactEmail"
+        else:
+            continue
+        if inferred not in used:
             mapping[index] = inferred
             used.add(inferred)
     return mapping
 
 
 def suggested_status(value):
-    key = normalized(value)
-    for status in JOB_STATUSES:
-        if key in {normalized(status)} | {
-            normalized(alias) for alias in STATUS_ALIASES[status].split("|")
-        }:
-            return status
-    return ""
+    return _STATUS_LOOKUP.get(normalized(value), "")
 
 
 def status_values(rows, mapping):
@@ -282,11 +283,13 @@ def row_fields(row, labels, options):
 
 def row_preview(sheet, options):
     labels, rows = layout(sheet, options["header"])
+    header = [normalized(value) for value in labels]
     result = []
     for number, row in rows:
-        if options["header"] and [normalized(value) for value in row] == [
-            normalized(value) for value in labels
-        ]:
+        if (
+            options["header"]
+            and [normalized(value) for value in row] == header
+        ):
             continue
         entry = {"number": number, "fields": {}, "source": row, "error": ""}
         try:
