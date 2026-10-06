@@ -2,13 +2,17 @@ services:
   web:
     build: .
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     volumes:
       - ./uploads:/app/uploads
     environment:
       SECRET_KEY: ${SECRET_KEY:?Set a private random SECRET_KEY in .env}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-jobtracker}
+      DATABASE_URL: postgresql://tracker_runtime:${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}@db:5432/${POSTGRES_DB:-jobtracker}
+      MIGRATION_DATABASE_URL: postgresql://tracker_migrator:${MIGRATOR_DB_PASSWORD:?Set MIGRATOR_DB_PASSWORD in .env}@db:5432/${POSTGRES_DB:-jobtracker}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      PUBLIC_SIGNUP_ENABLED: ${PUBLIC_SIGNUP_ENABLED:-false}
+      ALLOW_INSECURE_LOCAL_API: ${ALLOW_INSECURE_LOCAL_API:-false}
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
       RATELIMIT_STORAGE_URI: redis://redis:6379/0
     depends_on:
       db:
@@ -17,11 +21,15 @@ services:
         condition: service_healthy
 
   db:
-    image: postgres:14
+    build:
+      context: .
+      dockerfile: ops/postgres.Dockerfile
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: ${POSTGRES_DB:-jobtracker}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}
+      MIGRATOR_DB_PASSWORD: ${MIGRATOR_DB_PASSWORD:?Set MIGRATOR_DB_PASSWORD in .env}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
