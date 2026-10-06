@@ -73,7 +73,9 @@ def test_logout_requires_post_and_csrf(logged_client):
         assert "_user_id" in session
     token = csrf_token(logged_client, "/dashboard")
     assert (
-        logged_client.post("/logout", data={"csrf_token": token}).location
+        logged_client.post(
+            "/logout", data={"csrf_token": token, "version": 1}
+        ).location
         == "/login"
     )
     with logged_client.session_transaction() as session:
@@ -90,7 +92,10 @@ def test_logout_clears_existing_remember_cookie(app, client, users):
     assert client.get_cookie("remember_token") is not None
     token = csrf_token(client, "/dashboard")
     assert (
-        client.post("/logout", data={"csrf_token": token}).status_code == 302
+        client.post(
+            "/logout", data={"csrf_token": token, "version": 1}
+        ).status_code
+        == 302
     )
     assert client.get_cookie("remember_token") is None
     assert client.get("/dashboard").status_code == 302

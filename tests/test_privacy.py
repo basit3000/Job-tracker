@@ -25,6 +25,9 @@ PRIVATE_PATHS = (
     "backup.bak",
     "nested/export.sql",
     "nested/private/account.json",
+    "private/reference-client.json",
+    "private/reference-client.json.lock",
+    "private/reference-client.json.temporary.tmp",
     "data/export.csv",
     "backups/database.zip",
     "database_backups/full.zip",
@@ -86,6 +89,8 @@ def test_environment_example_contains_empty_credentials():
     example = dotenv_values(ROOT / ".env.example")
     assert example["SECRET_KEY"] == ""
     assert example["POSTGRES_PASSWORD"] == ""
+    assert example["APP_DB_PASSWORD"] == ""
+    assert example["MIGRATOR_DB_PASSWORD"] == ""
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="Git is unavailable")

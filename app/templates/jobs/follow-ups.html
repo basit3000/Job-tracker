@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% from "macros/jobs.html" import status_badge, page_links %}
+{% block title %}Follow-up queue - Job Scout Tracker{% endblock %}
+{% block content %}
+<h2>Follow-up queue</h2><p class="text-muted">Calendar days use UTC. Terminal statuses clear their follow-up date.</p>
+<nav class="d-flex gap-2 flex-wrap mb-4" aria-label="Follow-up filters">{% for value, label in [('overdue', 'Overdue'), ('today', 'Today'), ('upcoming', 'Today and upcoming')] %}<a class="btn btn-sm {{ 'btn-primary' if due == value else 'btn-outline-primary' }}" href="{{ url_for('jobs.follow_ups', due=value) }}">{{ label }}</a>{% endfor %}</nav>
+<div class="card"><div class="list-group list-group-flush">{% for job in pagination.items %}<a class="list-group-item list-group-item-action d-flex justify-content-between gap-3 flex-wrap" href="{{ url_for('jobs.job_detail', job_id=job.id) }}"><span><strong>{{ job.job_title }}</strong><br><span class="text-muted small">{{ job.company }}</span></span><span>{{ job.follow_up_on }} {{ status_badge(job.status) }}</span></a>{% else %}<p class="text-muted p-4 mb-0">No applications in this queue. Add a follow-up date when editing an active application.</p>{% endfor %}</div></div>
+{{ page_links(pagination) }}
+{% endblock %}

@@ -20,6 +20,8 @@ def app_factory(tmp_path):
         database_path = (folder / "test.db").as_posix()
         options = {
             "TESTING": True,
+            "PUBLIC_SIGNUP_ENABLED": True,
+            "ALLOW_INSECURE_LOCAL_API": True,
             "PROPAGATE_EXCEPTIONS": False,
             "SECRET_KEY": "a-private-test-secret-with-more-than-32-characters",
             "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database_path}",
@@ -82,10 +84,17 @@ def job(app, users):
         job = JobApplication(
             job_title="Engineer",
             company="Example",
-            status="Applied",
+            status="applied",
             user_id=users[0],
             resume_filename="existing.pdf",
         )
         db.session.add(job)
         db.session.commit()
         return job.id
+
+
+@pytest.fixture
+def paired(client, app, users):
+    from tests.helpers import pair_device
+
+    return pair_device(client, app, users[0])[0]

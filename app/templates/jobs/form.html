@@ -1,19 +1,21 @@
 {% extends "base.html" %}
 {% from "macros/forms.html" import field %}
 
-{% block title %}{{ title }} - Job Tracker{% endblock %}
+{% block title %}{{ title }} - Job Scout Tracker{% endblock %}
 
 {% block content %}
 <div class="mx-auto" style="max-width: 680px;">
   <div class="d-flex align-items-center gap-2 mb-3">
-    <a href="{{ url_for('jobs.job_list') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
+    <a href="{{ url_for('jobs.job_list') }}" class="btn btn-outline-secondary btn-sm"><i aria-hidden="true" class="bi bi-arrow-left"></i></a>
     <h2 class="mb-0">{{ title }}</h2>
   </div>
+  {% if conflict %}<div class="alert alert-warning">Your changes were not saved. <a href="{{ url_for('jobs.edit_job', job_id=job.id) }}">Reload the current version</a> and compare before editing again.</div>{% endif %}
 
   <div class="card">
     <div class="card-body p-4">
       <form method="POST" enctype="multipart/form-data" novalidate>
         {{ form.hidden_tag() }}
+        {% for error in form.version.errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
         <div class="row">
           <div class="col-md-6">{{ field(form.job_title, "e.g. Senior Backend Engineer") }}</div>
           <div class="col-md-6">{{ field(form.company, "e.g. Acme Inc.") }}</div>
@@ -29,13 +31,23 @@
           <div class="col-md-6">{{ field(form.contact_person, "e.g. Jane Doe") }}</div>
         </div>
         {{ field(form.job_url, "https://…") }}
+        <div class="row">
+          <div class="col-md-6">{{ field(form.board, "e.g. Example board") }}</div>
+          <div class="col-md-6">{{ field(form.contact_email, "recruiter@example.com") }}</div>
+        </div>
+        {{ field(form.contact_phone) }}
+        <div class="row">
+          <div class="col-md-6">{{ field(form.applied_on) }}</div>
+          <div class="col-md-6">{{ field(form.follow_up_on) }}</div>
+        </div>
+        <p class="form-text">Leave unknown dates blank. Follow-ups use UTC calendar days and clear when an application is accepted, rejected, closed, or skipped.</p>
 
         {{ field(form.notes, "Interview dates, recruiter details, anything useful…", rows="4") }}
 
         {% call field(form.resume) %}
           {% if job and job.resume_filename %}
             <div class="form-text">
-              <i class="bi bi-paperclip"></i>
+              <i aria-hidden="true" class="bi bi-paperclip"></i>
               Current: <a href="{{ url_for('jobs.download_resume', job_id=job.id) }}">resume on file</a>.
               Upload a new file to replace it.
             </div>

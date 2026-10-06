@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "macros/jobs.html" import stat_card, status_badge %}
 
-{% block title %}Dashboard - Job Tracker{% endblock %}
+{% block title %}Dashboard - Job Scout Tracker{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
@@ -10,15 +10,15 @@
     <p class="text-muted mb-0">A snapshot of your job search.</p>
   </div>
   <a href="{{ url_for('jobs.add_job') }}" class="btn btn-primary">
-    <i class="bi bi-plus-circle me-1"></i>Add application
+    <i aria-hidden="true" class="bi bi-plus-circle me-1"></i>Add application
   </a>
 </div>
 
 <div class="row g-3 mb-4">
   {{ stat_card(total, "Total", "collection") }}
   {{ stat_card(active, "In progress", "activity") }}
-  {{ stat_card(counts['Interviewing'], "Interviewing", "chat-dots") }}
-  {{ stat_card(counts['Offer'] + counts['Accepted'], "Offers", "trophy") }}
+  {{ stat_card(counts['interviewing'], "Interviewing", "chat-dots") }}
+  {{ stat_card(counts['offer'] + counts['accepted'], "Offers", "trophy") }}
 </div>
 
 <div class="row g-4">
@@ -72,4 +72,16 @@
     </div>
   </div>
 </div>
+<div class="row g-4 mt-1">
+  {% for label, items, due in [('Overdue follow-ups', overdue, 'overdue'), ('Today and upcoming', upcoming, 'upcoming')] %}
+  <div class="col-md-6"><section class="card h-100"><div class="card-header d-flex justify-content-between"><span>{{ label }}</span><a href="{{ url_for('jobs.follow_ups', due=due) }}">View queue</a></div>
+    <div class="list-group list-group-flush">{% for job in items %}<a class="list-group-item list-group-item-action" href="{{ url_for('jobs.job_detail', job_id=job.id) }}">{{ job.job_title }} &middot; {{ job.company }} <span class="text-muted small">{{ job.follow_up_on }}</span></a>{% else %}<p class="text-muted p-3 mb-0">No follow-ups in this queue.</p>{% endfor %}</div>
+  </section></div>
+  {% endfor %}
+</div>
+<section class="card mt-4"><div class="card-header">By actual application date</div><div class="card-body">
+  <p class="small text-muted">Unknown dates: {{ unknown_dates }}. Record creation time is not an application date.</p>
+  {% for date, count in by_date %}<span class="d-inline-block border rounded p-2 me-2 mb-2">{{ date }} <strong>{{ count }}</strong></span>{% else %}<p class="text-muted mb-0">No known application dates yet.</p>{% endfor %}
+  {% if by_date %}<p class="form-text mb-0">Showing up to the 30 latest application dates.</p>{% endif %}
+</div></section>
 {% endblock %}

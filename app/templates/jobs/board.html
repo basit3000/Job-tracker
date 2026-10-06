@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "macros/jobs.html" import status_badge, page_links %}
+{% block title %}Status board - Job Scout Tracker{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4"><div><h2>Status board</h2><p class="text-muted mb-0">Select a column to browse its pages. Open an application to edit its status.</p></div><a class="btn btn-primary" href="{{ url_for('jobs.add_job') }}">Add application</a></div>
+<div class="status-board" role="region" aria-label="Application status columns" tabindex="0">
+{% for status in statuses %}<section class="board-column {{ 'board-selected' if selected == status }}">
+  <h3 class="h6"><a href="{{ url_for('jobs.status_board', status=status) }}">{{ status_badge(status) }}</a> <span class="text-muted">{{ counts[status] }}</span></h3>
+  {% for job in (pagination.items if selected == status else columns[status]) %}
+  <a class="card board-card text-decoration-none" href="{{ url_for('jobs.job_detail', job_id=job.id) }}"><div class="card-body"><strong>{{ job.job_title }}</strong><div class="text-muted small mt-1">{{ job.company }}</div>{% if job.follow_up_on %}<div class="small mt-2">Follow up {{ job.follow_up_on }}</div>{% endif %}</div></a>
+  {% else %}<p class="small text-muted">No applications.</p>{% endfor %}
+  {% if selected != status and counts[status] > 10 %}<a class="small" href="{{ url_for('jobs.status_board', status=status) }}">Browse all {{ counts[status] }}</a>{% endif %}
+</section>{% endfor %}
+</div>
+<p class="small text-muted mt-3">Browsing {{ selected|title }}.</p>{{ page_links(pagination) }}
+{% endblock %}

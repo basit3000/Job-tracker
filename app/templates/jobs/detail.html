@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% from "macros/jobs.html" import date_label, delete_button, status_badge %}
 
-{% block title %}{{ job.job_title }} - Job Tracker{% endblock %}
+{% block title %}{{ job.job_title }} - Job Scout Tracker{% endblock %}
 
 {% block content %}
 <div class="mb-3">
-  <a href="{{ url_for('jobs.job_list') }}" class="small text-muted"><i class="bi bi-arrow-left me-1"></i>Back to applications</a>
+  <a href="{{ url_for('jobs.job_list') }}" class="small text-muted"><i aria-hidden="true" class="bi bi-arrow-left me-1"></i>Back to applications</a>
 </div>
 
 <div class="card">
@@ -14,11 +14,11 @@
       <div>
         {{ status_badge(job.status, "mb-2") }}
         <h2 class="mb-1">{{ job.job_title }}</h2>
-        <p class="text-muted mb-0"><i class="bi bi-building me-1"></i>{{ job.company }}{% if job.location %} &middot; {{ job.location }}{% endif %}</p>
+        <p class="text-muted mb-0"><i aria-hidden="true" class="bi bi-building me-1"></i>{{ job.company }}{% if job.location %} &middot; {{ job.location }}{% endif %}</p>
       </div>
       <div class="d-flex gap-2">
-        <a href="{{ url_for('jobs.edit_job', job_id=job.id) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
-        {{ delete_button(job.id) }}
+        <a href="{{ url_for('jobs.edit_job', job_id=job.id) }}" class="btn btn-outline-primary btn-sm"><i aria-hidden="true" class="bi bi-pencil me-1"></i>Edit</a>
+        {{ delete_button(job) }}
       </div>
     </div>
 
@@ -27,10 +27,13 @@
     <dl class="detail-grid">
       <dt>Salary</dt><dd>{{ job.salary or '—' }}</dd>
       <dt>Contact</dt><dd>{{ job.contact_person or '—' }}</dd>
+      <dt>Contact email</dt><dd>{{ job.contact_email or '—' }}</dd>
+      <dt>Contact phone</dt><dd>{{ job.contact_phone or '—' }}</dd>
+      <dt>Board / source</dt><dd>{{ job.board or '—' }}</dd>
       <dt>Job posting</dt>
       <dd>
         {% if job.safe_job_url %}
-          <a href="{{ job.safe_job_url }}" target="_blank" rel="noopener noreferrer">{{ job.safe_job_url }} <i class="bi bi-box-arrow-up-right small"></i></a>
+          <a href="{{ job.safe_job_url }}" target="_blank" rel="noopener noreferrer">{{ job.safe_job_url }} <i aria-hidden="true" class="bi bi-box-arrow-up-right small"></i></a>
         {% elif job.job_url %}
           {{ job.job_url }}
         {% else %}—{% endif %}
@@ -38,11 +41,14 @@
       <dt>Resume</dt>
       <dd>
         {% if job.resume_filename %}
-          <a href="{{ url_for('jobs.download_resume', job_id=job.id) }}"><i class="bi bi-paperclip me-1"></i>Download</a>
+          <a href="{{ url_for('jobs.download_resume', job_id=job.id) }}"><i aria-hidden="true" class="bi bi-paperclip me-1"></i>Download</a>
         {% else %}—{% endif %}
       </dd>
-      <dt>Applied</dt><dd>{{ date_label(job.applied_date, "%B %d, %Y") }}</dd>
+      <dt>Application date</dt><dd>{{ date_label(job.applied_on, "%B %d, %Y") if job.applied_on else 'Unknown' }}</dd>
+      <dt>Follow-up date</dt><dd>{{ date_label(job.follow_up_on, "%B %d, %Y") }}</dd>
+      <dt>Record created</dt><dd>{{ date_label(job.created_at, "%B %d, %Y") }}</dd>
       <dt>Last updated</dt><dd>{{ date_label(job.updated_date, "%B %d, %Y") }}</dd>
+      <dt>Version</dt><dd>{{ job.version }}</dd>
     </dl>
 
     {% if job.notes %}
@@ -51,6 +57,23 @@
       <div class="notes-block">{{ job.notes }}</div>
     </div>
     {% endif %}
+    {% if job.posted_at %}<p class="small text-muted mt-4">Posted {{ 'approximately ' if job.posted_at_approximate }}{{ job.posted_at|utc_timestamp }}</p>{% endif %}
+    {% if job.applicants %}
+    <section class="mt-4">
+      <h3 class="h6">Applicant observation</h3>
+      <p>{{ job.applicants.relation or '' }} {{ job.applicants.count if job.applicants.count is not none else 'Unknown count' }}{% if job.applicants.label %} &middot; {{ job.applicants.label }}{% endif %}</p>
+      <p class="small text-muted">Source: {{ job.applicants.source or 'Unknown' }} &middot; Observed: {{ job.applicants.observedAt or 'Unknown' }}{% if job.safe_observation_url %} &middot; <a href="{{ job.safe_observation_url }}" target="_blank" rel="noopener noreferrer">Observation source</a>{% endif %}</p>
+      <p class="form-text">An observation is not a verified number of completed applications or views.</p>
+    </section>
+    {% endif %}
+    <section class="mt-4">
+      <h3 class="h6">Status history</h3>
+      {% if job.history %}<ol class="history-list">
+        {% for event in job.history %}<li>{{ event.from_status|title if event.from_status else 'Created' }} &rarr; {{ event.status|title }}
+          <span class="small text-muted">&middot; {{ event.source }} &middot; Event time: {{ event.occurred_at|utc_timestamp if event.occurred_at else 'Unknown' }} &middot; Recorded: {{ event.recorded_at|utc_timestamp }}</span>
+        </li>{% endfor %}
+      </ol>{% else %}<p class="text-muted">No recorded transitions. Historical dates have not been inferred.</p>{% endif %}
+    </section>
   </div>
 </div>
 {% endblock %}

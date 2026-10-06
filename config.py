@@ -18,6 +18,10 @@ class Config:
     # Every worker must use the same private signing key.
     SECRET_KEY = os.environ.get("SECRET_KEY")
     DEBUG = env_bool("FLASK_DEBUG")
+    PUBLIC_SIGNUP_ENABLED = env_bool("PUBLIC_SIGNUP_ENABLED")
+    ALLOW_INSECURE_LOCAL_API = env_bool("ALLOW_INSECURE_LOCAL_API")
+    API_MAX_CONTENT_LENGTH = 128 * 1024
+    API_PAGE_SIZE = 50
 
     # Normalize the legacy "postgres://" scheme used by some providers.
     SQLALCHEMY_DATABASE_URI = normalize_database_url(
@@ -27,6 +31,7 @@ class Config:
         )
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {"hide_parameters": True}
 
     # File uploads (resumes).
     UPLOAD_FOLDER = os.environ.get(

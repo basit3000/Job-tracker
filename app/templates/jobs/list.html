@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% from "macros/jobs.html" import date_label, delete_button, status_badge %}
+{% from "macros/jobs.html" import date_label, delete_button, status_badge, page_links %}
 
-{% block title %}My Applications - Job Tracker{% endblock %}
+{% block title %}My Applications - Job Scout Tracker{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
   <h2 class="mb-0">My Applications</h2>
   <a href="{{ url_for('jobs.add_job') }}" class="btn btn-primary btn-sm">
-    <i class="bi bi-plus-circle me-1"></i>Add New
+    <i aria-hidden="true" class="bi bi-plus-circle me-1"></i>Add New
   </a>
 </div>
 
@@ -17,7 +17,7 @@
       <div class="col-12 col-md-5">
         <label class="form-label small text-muted mb-1">Search</label>
         <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <span class="input-group-text"><i aria-hidden="true" class="bi bi-search"></i></span>
           <input type="text" name="q" class="form-control" placeholder="Company, role, location…" value="{{ current_search }}">
         </div>
       </div>
@@ -26,7 +26,7 @@
         <select name="status" class="form-select">
           <option value="">All statuses</option>
           {% for s in statuses %}
-          <option value="{{ s }}" {{ 'selected' if current_status == s }}>{{ s }}</option>
+          <option value="{{ s }}" {{ 'selected' if current_status == s }}>{{ s|title }}</option>
           {% endfor %}
         </select>
       </div>
@@ -42,15 +42,22 @@
         <button type="submit" class="btn btn-outline-primary">Apply</button>
       </div>
     </div>
-    {% if current_search or current_status %}
+    <div class="row g-2 mt-2">
+      {% for name, choices in [('company', companies), ('board', boards)] %}
+      <div class="col-md-4"><label class="form-label small">{{ name|title }}</label><select class="form-select" name="{{ name }}"><option value="">All {{ name }} values</option>{% for value in choices %}<option value="{{ value }}" {{ 'selected' if filters[name] == value }}>{{ value }}</option>{% endfor %}</select></div>
+      {% endfor %}
+      <div class="col-md-4"><label class="form-label small">Follow-ups</label><select name="due" class="form-select"><option value="">Any date</option>{% for value, label in [('overdue', 'Overdue'), ('today', 'Today'), ('upcoming', 'Today and upcoming')] %}<option value="{{ value }}" {{ 'selected' if filters.due == value }}>{{ label }}</option>{% endfor %}</select></div>
+    </div>
+    {% if current_search or current_status or filters.company or filters.board or filters.due %}
     <div class="mt-2">
-      <a href="{{ url_for('jobs.job_list') }}" class="small text-muted"><i class="bi bi-x-circle me-1"></i>Clear filters</a>
+      <a href="{{ url_for('jobs.job_list') }}" class="small text-muted"><i aria-hidden="true" class="bi bi-x-circle me-1"></i>Clear filters</a>
     </div>
     {% endif %}
   </div>
 </form>
 
 {% if applications %}
+  <p class="small text-muted d-md-none">Swipe the table horizontally to see dates and actions.</p>
   <div class="card">
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
@@ -60,6 +67,7 @@
             <th>Company</th>
             <th>Status</th>
             <th>Applied</th>
+            <th>Follow-up</th>
             <th class="text-end">Actions</th>
           </tr>
         </thead>
@@ -72,17 +80,18 @@
             </td>
             <td>{{ job.company }}</td>
             <td>{{ status_badge(job.status) }}</td>
-            <td class="text-muted">{{ date_label(job.applied_date) }}</td>
+            <td class="text-muted">{{ date_label(job.applied_on) if job.applied_on else 'Unknown' }}</td>
+            <td class="text-muted">{{ date_label(job.follow_up_on) }}</td>
             <td class="text-end text-nowrap">
               {% if job.resume_filename %}
               <a href="{{ url_for('jobs.download_resume', job_id=job.id) }}" class="btn btn-outline-secondary btn-sm me-1" title="Download resume">
-                <i class="bi bi-paperclip"></i>
+                <i aria-hidden="true" class="bi bi-paperclip"></i>
               </a>
               {% endif %}
               <a href="{{ url_for('jobs.edit_job', job_id=job.id) }}" class="btn btn-outline-primary btn-sm me-1" title="Edit">
-                <i class="bi bi-pencil"></i>
+                <i aria-hidden="true" class="bi bi-pencil"></i>
               </a>
-              {{ delete_button(job.id, compact=true) }}
+              {{ delete_button(job, compact=true) }}
             </td>
           </tr>
           {% endfor %}
@@ -90,11 +99,11 @@
       </table>
     </div>
   </div>
-  <p class="text-muted small mt-2 mb-0">{{ applications|length }} application{{ '' if applications|length == 1 else 's' }}</p>
+  <p class="text-muted small mt-2 mb-0">{{ pagination.total }} matching application{{ '' if pagination.total == 1 else 's' }}</p>
 {% else %}
   <div class="empty-state">
-    <i class="bi bi-inbox"></i>
-    {% if current_search or current_status %}
+    <i aria-hidden="true" class="bi bi-inbox"></i>
+    {% if current_search or current_status or filters.company or filters.board or filters.due %}
       <p class="mt-2">No applications match your filters.</p>
       <a href="{{ url_for('jobs.job_list') }}" class="btn btn-outline-primary">Clear filters</a>
     {% else %}
@@ -103,4 +112,5 @@
     {% endif %}
   </div>
 {% endif %}
+{{ page_links(pagination) }}
 {% endblock %}

@@ -2,6 +2,8 @@ from flask import current_app
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from wtforms import (
+    DateField,
+    IntegerField,
     PasswordField,
     SelectField,
     StringField,
@@ -14,11 +16,13 @@ from wtforms.validators import (
     Email,
     EqualTo,
     Length,
+    NumberRange,
     Optional,
     ValidationError,
 )
+from wtforms.widgets import HiddenInput
 
-from app.models import JOB_STATUSES, JobApplication, User
+from app.models import JOB_STATUSES, STATUS_LABELS, JobApplication, User
 from app.utils import is_http_url
 
 PASSWORD_MIN_LENGTH = 8
@@ -133,10 +137,24 @@ class JobApplicationForm(FlaskForm):
     )
     status = SelectField(
         "Status",
-        choices=[(s, s) for s in JOB_STATUSES],
+        choices=[(s, STATUS_LABELS[s]) for s in JOB_STATUSES],
         validators=[DataRequired()],
     )
-    notes = TextAreaField("Notes", validators=[Optional()])
+    board = _job_text_field("Job board / source", JobApplication.board)
+    contact_email = _job_text_field(
+        "Contact email", JobApplication.contact_email, validators=[Email()]
+    )
+    contact_phone = _job_text_field(
+        "Contact phone", JobApplication.contact_phone
+    )
+    applied_on = DateField("Application date", validators=[Optional()])
+    follow_up_on = DateField("Follow-up date", validators=[Optional()])
+    version = IntegerField(
+        "Version",
+        widget=HiddenInput(),
+        validators=[Optional(), NumberRange(min=1)],
+    )
+    notes = TextAreaField("Notes", validators=[Optional(), Length(max=20000)])
     resume = FileField(
         "Resume",
         validators=[allowed_resume],

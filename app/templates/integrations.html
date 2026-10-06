@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import field, csrf_field %}
+{% block title %}Job Scout connection - Job Scout Tracker{% endblock %}
+{% block content %}
+<h2>Job Scout connection</h2>
+<p class="text-muted">The service API and fictional reference client are available. The adapter for your local Job Scout installation is a future integration.</p>
+<div class="row g-4">
+<div class="col-lg-6"><section class="card"><div class="card-body">
+  <h3 class="h5">Approve a device</h3><p class="small">Start pairing in the client, then inspect its code here. Only approve a request you initiated.</p>
+  <form method="POST">{{ form.hidden_tag() }}{{ field(form.code, "Code from the waiting client") }}
+  {% if pairing %}
+    <div class="alert alert-info">Device: <strong>{{ pairing.name }}</strong><br>Installation: <code>{{ pairing.installation_id }}</code></div>
+    <p class="small">Default scope: application identity, title/company, URL, board, location, status, dates, history, and public observations. Choose optional fields explicitly below.</p>
+    {% for value, label in form.optional_fields.choices %}<div class="form-check"><input class="form-check-input" type="checkbox" name="optional_fields" value="{{ value }}" id="field-{{ value }}" {{ 'checked' if value in form.optional_fields.data }}><label class="form-check-label" for="field-{{ value }}">{{ label }}</label></div>{% endfor %}
+    <p class="form-text">Selection grants these fields in both push and pull. Pair again to change the scope.</p>
+    <button class="btn btn-primary mt-3" name="action" value="approve">Approve this device</button>
+  {% else %}<button class="btn btn-primary" name="action" value="inspect">Inspect pairing request</button>{% endif %}
+  </form>
+</div></section></div>
+<div class="col-lg-6"><section class="card"><div class="card-body"><h3 class="h5">Privacy boundary</h3><p>Sync excludes candidate memory, saved answers, CVs, cover letters, attachments, preparation paths, filesystem paths, settings, credentials, and the job archive.</p><p class="small text-muted mb-0">Existing resume downloads stay in your authenticated browser session. Pairing does not grant file access. The tracker works while your local computer is off.</p></div></section></div>
+</div>
+<section class="mt-4"><h3 class="h5">Devices</h3>
+{% for device in devices %}<div class="card mb-3"><div class="card-body d-flex align-items-start justify-content-between gap-3 flex-wrap"><div><strong>{{ device.name }}</strong><p class="small text-muted mb-1">{{ device.installation_id }}</p><p class="small mb-1">{{ 'Disconnected / revoked' if device.revoked_at else 'Paired; client availability unknown' }}</p><p class="small text-muted mb-1">Last authenticated API exchange: {{ device.last_seen_at|utc_timestamp if device.last_seen_at else 'None yet' }}</p><p class="small mb-0">Optional fields: {{ device.optional_fields|join(', ') or 'None' }}</p></div>{% if not device.revoked_at %}<form method="POST" action="{{ url_for('integrations.revoke', device_id=device.id) }}" data-confirm="Disconnect and revoke this device?">{{ csrf_field() }}<button class="btn btn-outline-danger btn-sm">Disconnect</button></form>{% endif %}</div></div>{% else %}<div class="card"><p class="text-muted p-4 mb-0">No paired devices. Your tracker is ready for manual use.</p></div>{% endfor %}
+{% for device in devices if device.last_error_code %}<div class="alert alert-warning">{{ device.name }}: last API error <code>{{ device.last_error_code }}</code> at {{ device.last_error_at|utc_timestamp }}. Review the client or application before retrying.</div>{% endfor %}
+<p class="form-text">Last exchange is server-observed activity, not confirmation that local changes were applied. Network errors appear in the reference client; revoked credentials require pairing again.</p>
+</section>
+{% endblock %}

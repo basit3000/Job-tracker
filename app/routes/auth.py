@@ -1,5 +1,7 @@
 from flask import (
     Blueprint,
+    abort,
+    current_app,
     flash,
     redirect,
     render_template,
@@ -42,6 +44,8 @@ def home():
 @auth.route("/register", methods=["GET", "POST"])
 @limiter.limit(AUTH_RATE_LIMIT, methods=["POST"])
 def register():
+    if not current_app.config["PUBLIC_SIGNUP_ENABLED"]:
+        abort(404)
     form = RegistrationForm()
     if form.validate_on_submit():
         try:

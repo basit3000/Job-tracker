@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Export applications - Job Scout Tracker{% endblock %}
+{% block content %}
+<h2>Export applications</h2><p class="text-muted">Export active applications from this account. Files contain only selected fields plus public IDs, versions, and creation/update timestamps.</p>
+<section class="card"><div class="card-body"><form method="GET">
+  <div class="row g-2">{% for name in fields %}<div class="col-sm-6 col-lg-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="fields" value="{{ name }}" id="export-{{ name }}" {{ 'checked' if name in default_fields }}><label class="form-check-label" for="export-{{ name }}">{{ name }}{% if name in optional_fields %} <span class="text-muted small">(private detail)</span>{% endif %}</label></div></div>{% endfor %}</div>
+  <div class="d-flex gap-2 mt-4"><button class="btn btn-primary" formaction="{{ url_for('exports.download', format='json') }}">Download JSON</button><button class="btn btn-outline-primary" formaction="{{ url_for('exports.download', format='csv') }}">Download CSV</button></div>
+</form></div></section>
+<p class="form-text mt-3">Exports exclude resumes, storage paths, device credentials, and account credentials. They are portable record exports; full disaster recovery requires database and upload backups. CSV values that could execute spreadsheet formulas are escaped in the download.</p>
+{% endblock %}

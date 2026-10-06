@@ -215,7 +215,7 @@ h2 { font-size: 1.5rem; }
 .status-bar-fill {
   height: 100%;
   border-radius: 999px;
-  min-width: 2px;
+  min-width: 0;
 }
 .status-count {
   font-weight: 600;
@@ -257,6 +257,18 @@ h2 { font-size: 1.5rem; }
 .badge-offer        { background-color: var(--success); }
 .badge-accepted     { background-color: #10b981; }
 .badge-rejected     { background-color: var(--danger); }
+.badge-shortlisted  { background-color: #8b5cf6; }
+.badge-closed       { background-color: #475569; }
+.badge-skipped      { background-color: #64748b; }
+
+.status-board { display: flex; gap: 1rem; overflow-x: auto; padding: .5rem 0 1rem; }
+.board-column { flex: 0 0 245px; border: 1px solid var(--border); border-radius: .85rem; padding: 1rem; background: #f1f5f9; }
+.board-selected { border-color: var(--primary); }
+.board-card { margin: .75rem 0; color: var(--text); }
+.board-card:hover { border-color: var(--primary); }
+.history-list li { margin-bottom: .75rem; }
+.detail-grid dd, code, .board-card { overflow-wrap: anywhere; }
+@media (min-width: 1200px) { main.container { max-width: 1140px; } }
 
 /* ── Detail view ── */
 .detail-grid {

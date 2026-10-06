@@ -21,16 +21,17 @@ def test_dashboard_totals_and_recent_applications_are_user_scoped(
                 JobApplication(
                     job_title=f"Owner job {day}",
                     company="Owner company",
-                    status="Applied" if day % 2 else "Rejected",
+                    status="applied" if day % 2 else "rejected",
                     user_id=users[0],
                     applied_date=datetime(2026, 1, day, tzinfo=timezone.utc),
+                    created_at=datetime(2026, 1, day, tzinfo=timezone.utc),
                 )
             )
         db.session.add(
             JobApplication(
                 job_title="Another user's job",
                 company="Private company",
-                status="Offer",
+                status="offer",
                 user_id=users[1],
             )
         )
@@ -47,8 +48,8 @@ def test_dashboard_totals_and_recent_applications_are_user_scoped(
     context = contexts[0]
     assert context["total"] == 8
     assert context["active"] == 4
-    assert context["counts"]["Rejected"] == 4
-    assert context["counts"]["Offer"] == 0
+    assert context["counts"]["rejected"] == 4
+    assert context["counts"]["offer"] == 0
     assert [job.job_title for job in context["recent"]] == [
         f"Owner job {day}" for day in range(8, 3, -1)
     ]
@@ -162,7 +163,7 @@ def test_job_crud_resume_search_and_filters(logged_client, app, job):
         data=job_data(
             job_title="  Developer  ",
             company="  New Company  ",
-            status="Interviewing",
+            status="interviewing",
             job_url="https://example.com/jobs/1",
             csrf_token=token,
             resume=(BytesIO(b"new resume"), "../../resume.PDF"),
@@ -179,17 +180,17 @@ def test_job_crud_resume_search_and_filters(logged_client, app, job):
     assert response.headers["Content-Disposition"].startswith("attachment;")
     assert response.headers["Cache-Control"] == "no-store, private"
     results = logged_client.get(
-        "/jobs?q=New&status=Interviewing&sort=company"
+        "/jobs?q=New&status=interviewing&sort=company"
     ).data
     assert b"New Company" in results
-    assert b">Example<" not in results
+    assert b"<td>Example</td>" not in results
     assert logged_client.get("/jobs?sort=invalid").status_code == 200
     token = csrf_token(logged_client, f"/jobs/{new_id}/edit")
     response = logged_client.post(
         f"/jobs/{new_id}/edit",
         data=job_data(
             company="New Company",
-            status="Offer",
+            status="offer",
             csrf_token=token,
         ),
     )
@@ -198,11 +199,11 @@ def test_job_crud_resume_search_and_filters(logged_client, app, job):
         assert (
             db.session.get(JobApplication, new_id).resume_filename == filename
         )
-        assert db.session.get(JobApplication, new_id).status == "Offer"
+        assert db.session.get(JobApplication, new_id).status == "offer"
     token = csrf_token(logged_client, f"/jobs/{new_id}")
     assert (
         logged_client.post(
-            f"/jobs/{new_id}/delete", data={"csrf_token": token}
+            f"/jobs/{new_id}/delete", data={"csrf_token": token, "version": 2}
         ).status_code
         == 302
     )

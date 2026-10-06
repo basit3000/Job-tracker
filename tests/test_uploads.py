@@ -52,7 +52,7 @@ def test_failed_commit_preserves_old_resume_and_removes_new_file(
 
     monkeypatch.setattr(db.session, "commit", fail_commit)
     data = (
-        {"csrf_token": token}
+        {"csrf_token": token, "version": 1}
         if operation == "delete"
         else job_data(
             csrf_token=token,
