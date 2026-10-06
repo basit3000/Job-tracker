@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import field %}
+{% block title %}Account settings - Job Scout Tracker{% endblock %}
+{% block content %}
+<div class="row justify-content-center py-4">
+  <div class="col-lg-7">
+    <h1 class="h3 mb-4">Account settings</h1>
+    <div class="card"><div class="card-body p-4">
+      <p><strong>Email:</strong> {{ current_user.email }}</p>
+      <p><strong>Email/password sign-in:</strong> {{ 'Available' if current_user.password_hash else 'Use Google to sign in' }}</p>
+      <h2 class="h5 mt-4">Google sign-in</h2>
+      {% if current_user.google_subject %}
+        <p class="mb-0">Google is connected. Continue with Google on the login page to access this account.</p>
+      {% elif config.GOOGLE_LOGIN_ENABLED %}
+        <p>Connect the Google account with this same email address. Confirm your current password, then choose your Google account.</p>
+        <form action="{{ url_for('google_auth.start') }}" method="POST">
+          {{ form.hidden_tag() }}
+          {{ field(form.password, "Confirm your current password") }}
+          {{ form.submit(class="btn btn-outline-secondary", value="Connect Google") }}
+        </form>
+      {% else %}
+        <p class="text-muted mb-0">Google sign-in is currently unavailable.</p>
+      {% endif %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

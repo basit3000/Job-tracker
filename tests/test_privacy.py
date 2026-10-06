@@ -91,6 +91,8 @@ def test_environment_example_contains_empty_credentials():
     assert example["POSTGRES_PASSWORD"] == ""
     assert example["APP_DB_PASSWORD"] == ""
     assert example["MIGRATOR_DB_PASSWORD"] == ""
+    assert example["GOOGLE_CLIENT_SECRET"] == ""
+    assert example["GOOGLE_CLIENT_ID"] == ""
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="Git is unavailable")

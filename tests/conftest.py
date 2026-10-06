@@ -21,6 +21,9 @@ def app_factory(tmp_path):
         options = {
             "TESTING": True,
             "PUBLIC_SIGNUP_ENABLED": True,
+            "GOOGLE_CLIENT_ID": "",
+            "GOOGLE_CLIENT_SECRET": "",
+            "GOOGLE_REDIRECT_URI": "http://localhost:5000/auth/google/callback",
             "ALLOW_INSECURE_LOCAL_API": True,
             "PROPAGATE_EXCEPTIONS": False,
             "SECRET_KEY": "a-private-test-secret-with-more-than-32-characters",

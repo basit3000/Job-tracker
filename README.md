@@ -1,13 +1,15 @@
 # Job Scout Tracker
 
-A private Flask application for tracking applications online, independently of
+A Flask application for tracking private application records online, independently of
 whether a local Job Scout process is running. It extends this repository's app
 factory, blueprints, SQLAlchemy models, Jinja templates, and resume storage.
 
 ## Features
 
-- Private accounts, password hashing, CSRF-protected forms, and POST logout.
-  Public registration is disabled by default; create an account through the CLI.
+- Public email/password registration with private per-user records, password
+  hashing, CSRF-protected forms, and POST logout.
+- Google signup/sign-in when OAuth credentials are configured, with explicit
+  password-confirmed linking for existing accounts in Account settings.
 - Dashboard, searchable paginated table, status board, and follow-up queue with
   filters for status, company, board, and due dates.
 - Manual application editing, notes, contacts, salary, safe job links, and
@@ -55,20 +57,24 @@ For a new local development database, use a SQLite `DATABASE_URL`, then:
 
 ```powershell
 flask --app run.py db upgrade
-flask --app run.py create-user
 python run.py
 ```
 
-Open `http://localhost:5000/login`. The account command prompts for an email and
-password without enabling public signup. A real existing database needs a backup
-before `db upgrade`; development tests do not migrate your local database.
+Open `http://localhost:5000/register` to create an account, then log in.
+The optional `flask --app run.py create-user` command still creates accounts
+administratively. A real existing database needs a backup before `db upgrade`;
+development tests do not migrate your local database.
 
 Keep the migration directory tracked. Migration files describe schema changes,
-not your database contents. The new revision preserves legacy internal IDs,
+not your database contents. Tracker revision `c61e92ad7401` preserves legacy IDs,
 ownership, resume associations, and the original `applied_date`, maps legacy
 statuses, and introduces a separate nullable actual application date. Unexpected
 legacy statuses stop the upgrade for review. Never stamp an old schema as `head`
 to bypass these changes.
+
+Revision `d48f7a916b02` preserves existing password accounts and adds Google
+identities. Google-only accounts have no password credential. It refuses a
+downgrade that would discard Google identities; use a compatible backup instead.
 
 [Deployment and recovery](docs/deployment.md) explains existing databases,
 account bootstrap, opt-in fictional seeding, HTTPS, and backups. Do not seed a
@@ -83,7 +89,10 @@ real database.
 | `SECRET_KEY` | Required stable random signing key, at least 32 characters |
 | `DATABASE_URL` | Runtime database URI; local default `sqlite:///jobtracker.db` |
 | `UPLOAD_FOLDER` | Private resume storage, local default `uploads/` |
-| `PUBLIC_SIGNUP_ENABLED` | Explicit registration switch, default `false` |
+| `PUBLIC_SIGNUP_ENABLED` | Registration switch, default `true`; `false` closes new signup |
+| `GOOGLE_CLIENT_ID` | Google OAuth web client ID; empty until configured |
+| `GOOGLE_CLIENT_SECRET` | Private Google OAuth client secret; never commit it |
+| `GOOGLE_REDIRECT_URI` | Exact registered callback; local default `http://localhost:5000/auth/google/callback` |
 | `FLASK_DEBUG` | Development debugging, default `false`; off in production |
 | `SESSION_COOKIE_SECURE` | Use `true` behind HTTPS |
 | `RATELIMIT_STORAGE_URI` | Shared Redis storage for multiple workers |
@@ -106,6 +115,17 @@ docker compose up --build
 Compose provisions migration/runtime roles only on a fresh database volume.
 Existing volumes require the documented ownership transition before using this
 configuration. Do not delete an existing volume to make initialization rerun.
+
+## Google signup and sign-in
+
+A public domain is not needed for local development. Create a Google OAuth web
+client with the authorized redirect URI
+`http://localhost:5000/auth/google/callback`, then set its client ID and secret in
+your private `.env`. Restart after configuring them. The Google button appears
+on login/registration pages only when both credentials are configured.
+
+Follow [the Google login setup guide](docs/google-login.md) for Cloud Console
+steps, local testing, HTTPS deployment, and connecting an existing account.
 
 ## API and reference client
 
@@ -136,6 +156,12 @@ temporary uploads. They cover auth/ownership/privacy, migration preservation,
 API/browser versions, atomic failures, concurrent commits, retries, exports,
 reference-client recovery, and database backup/restore. The Node end-to-end test
 runs when Node 22+ is installed.
+
+Google tests replace only the provider HTTP transport with fictional responses;
+Authlib performs real state, PKCE, signature, issuer, audience, expiry, and nonce
+validation. Browser tests exercise public signup, Google signup/sign-in, and
+password-confirmed linking at desktop/mobile sizes. These do not contact real
+Google accounts or replace a live OAuth credential/deployment check.
 
 Optional desktop/mobile browser checks:
 

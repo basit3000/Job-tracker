@@ -36,9 +36,16 @@ def status_slug(status):
 
 
 class User(UserMixin, db.Model):
+    __table_args__ = (
+        db.CheckConstraint(
+            "password_hash IS NOT NULL OR google_subject IS NOT NULL",
+            name="ck_user_login_method",
+        ),
+    )
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(512), nullable=False)
+    email = db.Column(db.String(254), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(512))
+    google_subject = db.Column(db.String(255), unique=True)
     created_at = db.Column(db.DateTime, default=_utcnow)
     feed_sequence = db.Column(
         db.BigInteger, nullable=False, default=0, server_default="0"
@@ -56,7 +63,9 @@ class User(UserMixin, db.Model):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        return bool(self.password_hash) and check_password_hash(
+            self.password_hash, password
+        )
 
     @classmethod
     def find_by_email(cls, email):

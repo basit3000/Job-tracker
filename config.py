@@ -19,6 +19,11 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY")
     DEBUG = env_bool("FLASK_DEBUG")
     PUBLIC_SIGNUP_ENABLED = env_bool("PUBLIC_SIGNUP_ENABLED", default=True)
+    GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    GOOGLE_REDIRECT_URI = os.environ.get(
+        "GOOGLE_REDIRECT_URI", "http://localhost:5000/auth/google/callback"
+    )
     ALLOW_INSECURE_LOCAL_API = env_bool("ALLOW_INSECURE_LOCAL_API")
     API_MAX_CONTENT_LENGTH = 128 * 1024
     API_PAGE_SIZE = 50

@@ -43,6 +43,7 @@
                 <i aria-hidden="true" class="bi bi-person-circle me-1"></i>{{ current_user.email }}
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ url_for('google_auth.account') }}">Account settings</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('integrations.index') }}">Job Scout connection</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('exports.index') }}">Export applications</a></li>
                 <li>

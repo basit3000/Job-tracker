@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from wtforms import (
     DateField,
+    HiddenField,
     IntegerField,
     PasswordField,
     SelectField,
@@ -12,6 +13,7 @@ from wtforms import (
 )
 from wtforms.validators import (
     URL,
+    AnyOf,
     DataRequired,
     Email,
     EqualTo,
@@ -102,6 +104,19 @@ class RegistrationForm(AccountForm):
 
 class LoginForm(AccountForm):
     submit = SubmitField("Log in")
+
+
+class GoogleLoginForm(FlaskForm):
+    intent = HiddenField(
+        default="signin",
+        validators=[DataRequired(), AnyOf(["signin", "link"])],
+    )
+    next = HiddenField(validators=[Optional(), Length(max=2048)])
+    password = PasswordField(
+        "Current password",
+        validators=[Optional(), Length(max=PASSWORD_MAX_LENGTH)],
+    )
+    submit = SubmitField("Continue with Google")
 
 
 class JobApplicationForm(FlaskForm):

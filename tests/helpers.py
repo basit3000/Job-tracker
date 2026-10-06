@@ -7,8 +7,8 @@ from app.devices import approve_pairing
 MIGRATIONS = str(Path(__file__).resolve().parents[1] / "migrations")
 
 
-def csrf_token(client, path):
-    response = client.get(path)
+def csrf_token(client, path, *, base_url=None):
+    response = client.get(path, base_url=base_url)
     assert response.status_code == 200
     match = re.search(rb'name="csrf_token"[^>]*value="([^"]+)"', response.data)
     assert match, response.data

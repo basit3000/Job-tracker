@@ -7,7 +7,14 @@ from flask import Flask, request, url_for
 
 from app.cli import register_cli
 from app.errors import register_error_handlers
-from app.extensions import csrf, db, limiter, login_manager, migrate
+from app.extensions import (
+    csrf,
+    db,
+    init_google_oauth,
+    limiter,
+    login_manager,
+    migrate,
+)
 from app.security import register_security_headers
 from app.uploads import resume_upload_help
 
@@ -31,6 +38,7 @@ def create_app(config_object="config.Config"):
     migrate.init_app(app, db)
     csrf.init_app(app)
     limiter.init_app(app)
+    init_google_oauth(app)
 
     login_manager.login_view = "auth.login"
     login_manager.login_message = "Please log in to access that page."
@@ -40,6 +48,7 @@ def create_app(config_object="config.Config"):
     from app.models import User, status_slug
     from app.routes.api import api
     from app.routes.auth import auth, main
+    from app.routes.google_auth import google_auth
     from app.routes.integrations import integrations
     from app.routes.jobs import jobs
 
@@ -50,6 +59,7 @@ def create_app(config_object="config.Config"):
     app.jinja_env.filters["utc_timestamp"] = iso
     app.jinja_env.globals["pagination_url"] = pagination_url
     app.register_blueprint(auth)
+    app.register_blueprint(google_auth)
     app.register_blueprint(main)
     app.register_blueprint(jobs)
     app.register_blueprint(api)

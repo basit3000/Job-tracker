@@ -20,13 +20,18 @@ On Unix, activate with `source .venv/bin/activate`. Copy `.env.example` to `.env
 and set a newly generated `SECRET_KEY` (at least 32 characters). Generate values
 with `python -c "import secrets; print(secrets.token_hex(32))"`. Never commit `.env`.
 Omit `DATABASE_URL` only when intentionally using the local SQLite default.
-Keep `PUBLIC_SIGNUP_ENABLED=false`; create the first account interactively:
+Public signup is enabled by default. Start the app and register at `/register`:
 
 ```text
 flask --app run.py db upgrade
-flask --app run.py create-user
 python run.py
 ```
+
+The optional `flask --app run.py create-user` command still supports administrative
+account creation. Set `PUBLIC_SIGNUP_ENABLED=false` only when intentionally
+closing new registration; existing password/Google users can continue signing in.
+For local Google signup/login without a public domain, follow
+[Google login setup](google-login.md). No real Google credentials are included.
 
 Back up an existing database/uploads before upgrading. Migration
 `c61e92ad7401` preserves internal IDs, ownership, old date values and resumes,
@@ -35,6 +40,9 @@ dates, and seeds the change feed without inventing historical transitions.
 Unknown legacy statuses cause a preflight error before this migration changes
 the schema. Investigate them and resolve them through a reviewed migration;
 do not delete data or manually rewrite a live database to bypass the check.
+The subsequent `d48f7a916b02` migration adds stable Google identities, widens account
+email capacity, and permits passwordless Google accounts while preserving existing
+passwords. Downgrade refuses to discard these identities or longer addresses.
 
 For a fictional demo, choose an empty disposable SQLite database, enable debug
 locally, and run `flask --app run.py seed-demo --confirm-fictional`. It prompts
@@ -127,7 +135,7 @@ not the application records.
 
 Terminate HTTPS in a maintained reverse proxy and forward to the loopback web
 port. Set `SESSION_COOKIE_SECURE=true`, `FLASK_DEBUG=false`,
-`PUBLIC_SIGNUP_ENABLED=false`, and `ALLOW_INSECURE_LOCAL_API=false`.
+`PUBLIC_SIGNUP_ENABLED=true`, and `ALLOW_INSECURE_LOCAL_API=false`.
 Forward the original Host and `X-Forwarded-Proto: https`. Gunicorn's
 `FORWARDED_ALLOW_IPS` must contain only the exact trusted proxy peer address as
 seen by the web container, not `*`. A Docker bridge peer is often different from

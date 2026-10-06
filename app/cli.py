@@ -17,7 +17,7 @@ from app.services import save_application
 @click.password_option(confirmation_prompt=True)
 @with_appcontext
 def create_user(email, password):
-    """Create a private account without enabling public registration."""
+    """Create an account administratively, independent of public signup."""
     # The CLI shares form validation without requiring a browser CSRF token.
     form = RegistrationForm(
         data={"email": email, "password": password, "confirm": password},

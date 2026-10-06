@@ -39,7 +39,7 @@ def authenticate_user(email, password):
     user = User.find_by_email(email)
     password_valid = (
         user.check_password(password)
-        if user
+        if user and user.password_hash
         else check_password_hash(_DUMMY_PASSWORD_HASH, password)
     )
-    return user if user and password_valid else None
+    return user if user and user.password_hash and password_valid else None

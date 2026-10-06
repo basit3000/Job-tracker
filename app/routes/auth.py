@@ -17,7 +17,7 @@ from app.authentication import (
     register_user,
 )
 from app.extensions import limiter
-from app.forms import LoginForm, RegistrationForm
+from app.forms import GoogleLoginForm, LoginForm, RegistrationForm
 from app.security import AUTH_RATE_LIMIT
 from app.utils import is_safe_redirect
 
@@ -56,7 +56,9 @@ def register():
             flash("Account created! Please log in.", "success")
             return redirect(url_for("auth.login"))
 
-    return render_template("register.html", form=form)
+    return render_template(
+        "register.html", form=form, google_form=GoogleLoginForm()
+    )
 
 
 @auth.route("/login", methods=["GET", "POST"])
@@ -66,19 +68,14 @@ def login():
     if form.validate_on_submit():
         user = authenticate_user(form.email.data, form.password.data)
         if user:
-            session.clear()
-            login_user(user)
-            flash("Welcome back!", "success")
-            next_page = request.args.get("next")
-            target = (
-                next_page
-                if is_safe_redirect(next_page)
-                else url_for("jobs.dashboard")
-            )
-            return redirect(target)
+            return finish_login(user, request.args.get("next"))
         flash("Invalid email or password.", "danger")
 
-    return render_template("login.html", form=form)
+    return render_template(
+        "login.html",
+        form=form,
+        google_form=GoogleLoginForm(next=request.args.get("next", "")[:2048]),
+    )
 
 
 @auth.route("/logout", methods=["POST"])
@@ -89,3 +86,14 @@ def logout():
     logout_user()
     flash("You have been logged out.", "info")
     return redirect(url_for("auth.login"))
+
+
+def finish_login(user, next_page=None, *, message="Welcome back!"):
+    """Rotate session data for both password and verified Google sign-ins."""
+    session.clear()
+    login_user(user)
+    flash(message, "success")
+    target = (
+        next_page if is_safe_redirect(next_page) else url_for("jobs.dashboard")
+    )
+    return redirect(target)
