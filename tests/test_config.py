@@ -1,6 +1,32 @@
+import os
+import subprocess
+import sys
+
 import pytest
 
 from config import env_bool, normalize_database_url
+
+
+@pytest.mark.parametrize(
+    "override,expected", [(None, "True"), ("false", "False")]
+)
+def test_public_signup_default_can_be_explicitly_closed(override, expected):
+    environment = os.environ.copy()
+    environment.pop("PUBLIC_SIGNUP_ENABLED", None)
+    if override is not None:
+        environment["PUBLIC_SIGNUP_ENABLED"] = override
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from config import Config; print(Config.PUBLIC_SIGNUP_ENABLED)",
+        ],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert result.stdout.strip() == expected
 
 
 @pytest.mark.parametrize("scheme", ["postgres", "postgresql"])

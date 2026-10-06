@@ -18,7 +18,7 @@ class Config:
     # Every worker must use the same private signing key.
     SECRET_KEY = os.environ.get("SECRET_KEY")
     DEBUG = env_bool("FLASK_DEBUG")
-    PUBLIC_SIGNUP_ENABLED = env_bool("PUBLIC_SIGNUP_ENABLED")
+    PUBLIC_SIGNUP_ENABLED = env_bool("PUBLIC_SIGNUP_ENABLED", default=True)
     ALLOW_INSECURE_LOCAL_API = env_bool("ALLOW_INSECURE_LOCAL_API")
     API_MAX_CONTENT_LENGTH = 128 * 1024
     API_PAGE_SIZE = 50
