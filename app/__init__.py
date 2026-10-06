@@ -1,6 +1,5 @@
 import os
 
-import click
 from flask import Flask, render_template
 
 from app.extensions import db, login_manager, migrate, csrf
@@ -37,7 +36,6 @@ def create_app(config_object="config.Config"):
 
     register_error_handlers(app)
     register_context_processors(app)
-    register_cli(app)
 
     return app
 
@@ -66,11 +64,3 @@ def register_context_processors(app):
     @app.context_processor
     def inject_globals():
         return {"current_year": datetime.now(timezone.utc).year}
-
-
-def register_cli(app):
-    @app.cli.command("init-db")
-    def init_db():
-        """Create database tables (handy for a fresh SQLite setup)."""
-        db.create_all()
-        click.echo("Initialised the database.")
