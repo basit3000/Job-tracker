@@ -1,229 +1,177 @@
-# Job Tracker
+# Job Scout Tracker
 
-A full-stack web application for tracking job applications, built with Flask. Manage your
-job search by logging applications, tracking statuses, attaching resumes, and keeping
-notes — all behind secure user authentication.
+A private Flask application for tracking applications online, independently of
+whether a local Job Scout process is running. It extends this repository's app
+factory, blueprints, SQLAlchemy models, Jinja templates, and resume storage.
 
 ## Features
 
-- **User Authentication** — Register, login, and logout with hashed passwords (Werkzeug)
-- **Dashboard** — At-a-glance stats: totals, in-progress, interviews, and offers, with a per-status breakdown
-- **Job Application CRUD** — Add, edit, view, and delete applications with rich fields (title, company, location, salary, posting URL, contact, notes)
-- **Search, Filter & Sort** — Find applications by company/role/location, filter by status, and sort by date or name
-- **Resume Uploads** — Attach a resume (PDF/DOC/DOCX/RTF/TXT) to each application and download it later
-- **Status Tracking** — Wishlist → Applied → Interviewing → Offer → Accepted / Rejected
-- **Per-User Data** — Each user only ever sees their own applications
-- **Security** — CSRF protection on every form, hardened session cookies, safe redirects, open-redirect protection
-- **Docker Support** — Docker Compose with Gunicorn, PostgreSQL, and Redis for shared authentication rate limits
-- **Database Migrations** — Schema changes managed with Flask-Migrate / Alembic
+- Private accounts, password hashing, CSRF-protected forms, and POST logout.
+  Public registration is disabled by default; create an account through the CLI.
+- Dashboard, searchable paginated table, status board, and follow-up queue with
+  filters for status, company, board, and due dates.
+- Manual application editing, notes, contacts, salary, safe job links, and
+  authenticated resume uploads/downloads.
+- Eight canonical statuses: `shortlisted`, `applied`, `interviewing`, `offer`,
+  `accepted`, `rejected`, `closed`, and `skipped`.
+- Nullable application/follow-up calendar dates, UTC event timestamps, and status
+  history with provenance. Unknown application dates remain unknown. Follow-ups
+  use the UTC calendar and clear automatically for terminal statuses.
+- Optional public posting/applicant observations with source and observation
+  time; unknown counts remain unknown.
+- Account-scoped JSON/CSV exports with field selection and CSV formula protection.
+- Browser-approved device pairing, explicit optional field permissions, immediate
+  revocation, and a versioned bearer-authenticated API with OpenAPI schemas.
+- Atomic version checks, idempotent mutations, explicit identity mappings,
+  commit-ordered change feeds, stable snapshots, and deletion tombstones.
+- A standalone Node reference client that demonstrates durable retries, push/pull,
+  conflict review, and revocation using fictional records.
+- Docker deployment with Gunicorn, PostgreSQL roles for migration/runtime access,
+  Redis rate limits, tracked migrations, and documented backup/recovery.
 
-## Tech Stack
+The reference client is working demonstration code. Connecting the installed
+Job Scout application still requires a dedicated adapter; see the
+[integration guide](docs/job-scout-integration.md). Resume files and candidate
+memory are outside the sync API.
 
-| Layer      | Technology                          |
-|------------|-------------------------------------|
-| Backend    | Python 3.11, Flask 3                 |
-| Database   | PostgreSQL 14 (SQLite for dev)      |
-| ORM        | Flask-SQLAlchemy                    |
-| Migrations | Flask-Migrate (Alembic)             |
-| Auth       | Flask-Login, Werkzeug password hash |
-| Forms      | Flask-WTF, WTForms (+ CSRF)         |
-| Frontend   | Jinja2 templates, Bootstrap 5       |
-| Server     | Gunicorn (production)               |
-| Container  | Docker, Docker Compose              |
+## Local setup
 
-## Project Structure
+Use Python 3.11 or newer. From the repository root:
 
-```
-├── config.py                 # App configuration (secrets, DB URI, uploads, cookies)
-├── run.py                    # Application entry point (dev server)
-├── requirements.txt          # Pinned Python dependencies
-├── Dockerfile                # Container image (Gunicorn)
-├── docker-compose.yml        # Web + PostgreSQL + Redis orchestration
-├── migrations/              # Checked-in Alembic migration history
-├── tests/                   # Security, CRUD, file lifecycle, and migration checks
-├── app/
-│   ├── __init__.py           # App factory (create_app), error handlers, security headers
-│   ├── extensions.py         # SQLAlchemy, LoginManager, Migrate, CSRFProtect, Limiter
-│   ├── forms.py              # WTForms form classes
-│   ├── authentication.py     # Account creation and credential checks
-│   ├── database.py           # Shared commit / rollback boundary
-│   ├── errors.py             # Shared error page rendering
-│   ├── security.py           # HTTP headers and authentication rate limit policy
-│   ├── services.py           # User-scoped application queries and persistence
-│   ├── uploads.py            # Resume file storage and upload policy
-│   ├── utils.py              # URL validation
-│   ├── models.py             # User and JobApplication models
-│   ├── routes/
-│   │   ├── auth.py           # Register, login, logout
-│   │   └── jobs.py           # Dashboard + job CRUD + resume upload/download
-│   ├── static/css/styles.css # Custom styles
-│   ├── static/js/forms.js    # Form confirmation behavior
-│   └── templates/            # Jinja2 HTML templates
-│       ├── base.html
-│       ├── home.html
-│       ├── login.html
-│       ├── register.html
-│       ├── auth/base.html    # Shared login / registration layout
-│       ├── macros/           # Shared fields, CSRF inputs, badges, and controls
-│       ├── errors/error.html
-│       └── jobs/
-│           ├── dashboard.html
-│           ├── list.html
-│           ├── detail.html
-│           └── form.html     # Shared add/edit form
-└── uploads/                  # User-uploaded resumes (created at runtime)
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.11+
-- Docker & Docker Compose (optional, for the PostgreSQL setup)
-
-### Local Development (SQLite)
-
-```bash
-# Create and activate a virtual environment
-python -m venv venv
-venv\Scripts\activate          # Windows
-# source venv/bin/activate     # macOS/Linux
-
-# Install dependencies
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+Copy-Item .env.example .env
+```
 
-# Copy .env.example to .env and set SECRET_KEY to a generated random value
-# See "Environment Variables" below
+Set a private, stable `SECRET_KEY` in `.env`, using a generated value:
 
-# Apply the checked-in database migrations
+```powershell
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+For a new local development database, use a SQLite `DATABASE_URL`, then:
+
+```powershell
 flask --app run.py db upgrade
-
-# Start the development server
+flask --app run.py create-user
 python run.py
 ```
 
-The app will be available at **http://localhost:5000**.
+Open `http://localhost:5000/login`. The account command prompts for an email and
+password without enabling public signup. A real existing database needs a backup
+before `db upgrade`; development tests do not migrate your local database.
 
-For future schema changes, run `flask --app run.py db migrate -m "message"`,
-review the generated migration, then run `flask --app run.py db upgrade`.
-Commit migration scripts along with model changes.
+Keep the migration directory tracked. Migration files describe schema changes,
+not your database contents. The new revision preserves legacy internal IDs,
+ownership, resume associations, and the original `applied_date`, maps legacy
+statuses, and introduces a separate nullable actual application date. Unexpected
+legacy statuses stop the upgrade for review. Never stamp an old schema as `head`
+to bypass these changes.
 
-If an existing database was created with the old `init-db` command, it has no
-Alembic revision. Back it up and compare its schema to the current models before
-using `flask --app run.py db stamp head` to record an already matching schema.
-Databases with migration history should use `db upgrade` directly.
+[Deployment and recovery](docs/deployment.md) explains existing databases,
+account bootstrap, opt-in fictional seeding, HTTPS, and backups. Do not seed a
+real database.
 
-### Docker (PostgreSQL + Gunicorn)
+## Configuration
 
-```bash
-# Create a .env file with the variables below, then:
-docker-compose up --build
+`.env.example` contains empty secret placeholders; `.env` is private and ignored.
+
+| Variable | Purpose |
+| --- | --- |
+| `SECRET_KEY` | Required stable random signing key, at least 32 characters |
+| `DATABASE_URL` | Runtime database URI; local default `sqlite:///jobtracker.db` |
+| `UPLOAD_FOLDER` | Private resume storage, local default `uploads/` |
+| `PUBLIC_SIGNUP_ENABLED` | Explicit registration switch, default `false` |
+| `FLASK_DEBUG` | Development debugging, default `false`; off in production |
+| `SESSION_COOKIE_SECURE` | Use `true` behind HTTPS |
+| `RATELIMIT_STORAGE_URI` | Shared Redis storage for multiple workers |
+| `ALLOW_INSECURE_LOCAL_API` | Explicit loopback-only development API exception, default `false` |
+| `POSTGRES_PASSWORD` | Compose database administration credential |
+| `MIGRATOR_DB_PASSWORD` | Separate Compose schema-owner credential |
+| `APP_DB_PASSWORD` | Separate Compose runtime credential |
+| `MIGRATION_DATABASE_URL` | Migrator URI for startup migrations, separate from runtime URI |
+| `FORWARDED_ALLOW_IPS` | Exact trusted proxy peers for Gunicorn |
+
+For a fresh Compose database, generate separate hexadecimal passwords of at least
+32 characters for all three database credentials. Compose publishes the web port
+on loopback. Production device connections require HTTPS; put a correctly
+configured reverse proxy in front, with secure cookies and trusted proxy peers.
+
+```powershell
+docker compose up --build
 ```
 
-The container applies the checked-in migrations before starting Gunicorn.
-Compose requires both `SECRET_KEY` and `POSTGRES_PASSWORD` in `.env` and starts
-Redis for rate limits shared across Gunicorn workers.
-App available at **http://localhost:5000**.
+Compose provisions migration/runtime roles only on a fresh database volume.
+Existing volumes require the documented ownership transition before using this
+configuration. Do not delete an existing volume to make initialization rerun.
 
-## Environment Variables
+## API and reference client
 
-Create a `.env` file in the project root (it is git-ignored). Generate a secret key with
-`python -c "import secrets; print(secrets.token_hex(32))"`.
+The public schema is served at `/api/v1/openapi.json`. All tracker API data
+requires a device credential, independently of browser cookies. Pairing requires
+approval from the signed-in browser. Notes, contact fields, and salary require
+explicit individual permissions; omitted fields leave stored values unchanged.
 
-| Variable               | Description                                          | Default                   |
-|------------------------|------------------------------------------------------|---------------------------|
-| `SECRET_KEY`           | Private random session / CSRF key, at least 32 characters | required              |
-| `DATABASE_URL`         | Database connection URI                              | `sqlite:///jobtracker.db` |
-| `UPLOAD_FOLDER`        | Where resumes are stored                             | `./uploads`               |
-| `SESSION_COOKIE_SECURE`| `true` to only send cookies over HTTPS               | `false`                   |
-| `FLASK_DEBUG`          | `true`/`false` for the dev server                    | `false`                   |
-| `RATELIMIT_STORAGE_URI`| Shared rate limit storage for multiple workers     | `memory://` locally; Redis in Compose |
-| `POSTGRES_USER`        | PostgreSQL username (Docker)                         | —                         |
-| `POSTGRES_PASSWORD`    | PostgreSQL password (Docker)                         | required for Docker       |
-| `POSTGRES_DB`          | PostgreSQL database name (Docker)                    | —                         |
+See [the API contract](docs/api.md) for request/response fields, validation,
+versions, idempotency, cursors, snapshots, tombstones, and retention. See
+[reference-client instructions](docs/job-scout-integration.md#fictional-reference-client) for Node 22+ usage
+and durable private state. The client does not read real Job Scout records.
 
-Example `.env`:
+## Tests and checks
 
-```env
-SECRET_KEY=paste-a-generated-random-secret-of-at-least-32-characters
-SESSION_COOKIE_SECURE=false
-# Docker / PostgreSQL
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=paste-a-separately-generated-random-password
-POSTGRES_DB=jobtracker
-```
-
-Generate separate random values for `SECRET_KEY` and `POSTGRES_PASSWORD` using
-the command above. Hexadecimal passwords also avoid URI escaping issues in the
-Compose database URL. For an HTTPS deployment, set `SESSION_COOKIE_SECURE=true`.
-Keep debug mode off on public deployments. Non-Compose deployments with multiple
-workers must configure shared rate limit storage, such as Redis.
-
-Login and registration POST requests are limited to 10 per minute and 100 per
-hour per client IP. Logout uses a CSRF-protected POST form. Job posting links
-accept HTTP and HTTPS, and unsafe legacy URLs are displayed as plain text.
-
-## Tests and Dependency Audit
-
-```bash
+```powershell
 pip install -r requirements-dev.txt
 python -m pytest -q
 python -m ruff check .
 python -m ruff format --check .
+python -m pip check
 python -m pip_audit -r requirements.txt
+node --test reference-client/client.test.mjs
 ```
 
-Tests use temporary SQLite databases upgraded through Alembic and temporary
-upload folders. They cover authentication, CSRF, authorization between users,
-unsafe URLs, resume replacement failures, and migration data preservation.
+Tests use fictional accounts, temporary databases upgraded through Alembic, and
+temporary uploads. They cover auth/ownership/privacy, migration preservation,
+API/browser versions, atomic failures, concurrent commits, retries, exports,
+reference-client recovery, and database backup/restore. The Node end-to-end test
+runs when Node 22+ is installed.
 
-## Development Conventions
+Optional desktop/mobile browser checks:
 
-Follow [PEP 8](https://peps.python.org/pep-0008/) for naming, imports, and readable
-Python formatting. `pyproject.toml` sets Python 3.11 as the lint target, a
-79-character line limit, and checks for errors, import order, common mistakes,
-unnecessary complexity, and functions with excessive branching.
+```powershell
+pip install -r requirements-browser.txt
+python -m playwright install chromium
+$env:RUN_BROWSER_TESTS = '1'
+python -m pytest tests/test_browser_flows.py -q
+```
 
-The [Flask application factory](https://flask.palletsprojects.com/en/stable/patterns/appfactories/)
-configures extensions and registers blueprints. Routes handle HTTP input,
-forms, and responses; authentication and application services handle business
-operations. Models own reusable account and application queries.
+PostgreSQL concurrency and constraint checks run when `TEST_POSTGRES_URL` points
+to a dedicated test database whose user can create schemas. They create and
+remove only their own randomly named test schema. Without that variable, those
+checks skip; SQLite tests do not verify PostgreSQL behavior. Deployment role
+verification and commands are in [the deployment guide](docs/deployment.md).
 
-- Begin application queries with `JobApplication.for_user(user_id)` to preserve
-  ownership scoping.
-- Use `database_transaction()` for service writes. Upload cleanup follows a
-  successful commit, and failed uploads or commits clean up new files.
-- Reuse [Jinja macros](https://jinja.palletsprojects.com/en/stable/templates/#macros)
-  and the shared authentication layout for fields, validation errors, CSRF
-  inputs, badges, dates, and delete controls.
-- Derive form length limits from model columns and upload messages from config
-  so validation and displayed limits agree.
-- Keep migration scripts self-contained: historical schema steps must remain
-  independent of changing application models and helpers.
+## Code and privacy conventions
 
-Tests are organized by authentication, job behavior, upload failures, security,
-configuration, and migrations. Common request helpers live in `tests/helpers.py`.
+Routes handle HTTP input and responses; shared services enforce ownership,
+validation, version checks, and transactions. Browser and API writes use one
+application update path. Shared Jinja macros render fields, badges, dates,
+CSRF tokens, pagination, and deletion controls. Python formatting and complexity
+limits are configured in `pyproject.toml`; migration scripts stay independent of
+changing application helpers.
 
-## Private Local Files
+Git and Docker exclusions cover private environment files, database files,
+dumps/backups, uploads, logs, keys, credentials, and private state directories.
+Test fixtures and demo records are fictional. Keep real personal data and
+credentials out of commits and screenshots. Author attribution belongs in Git
+commit metadata.
 
-Git and Docker exclusions cover local environment files, database files and
-journals, database exports and backups, resume uploads, logs, private keys,
-credential files, and private data directories. Local data remains on your
-computer; it is excluded from source commits and container build context.
-
-`.env.example` is a committable template with empty credential values. Test
-accounts and migration-test rows use fictional `example.com` addresses.
-The privacy tests check exclusions for both root and nested paths and verify
-that the environment template contains no credential values.
-
-## Usage
-
-1. **Register** an account at `/register`
-2. **Log in** at `/login`
-3. Land on your **Dashboard** (`/dashboard`) for an overview
-4. **Add** applications at `/jobs/add` (optionally attach a resume)
-5. **Browse** and search all applications at `/jobs`
-6. **View** an application's details, **Edit**, or **Delete** it
+Deletion hides records, removes their manual resume, and creates a sync tombstone.
+Historical snapshots, receipts, mappings, and tombstones are retained; deletion
+is not an immediate purge of every historical copy. JSON/CSV exports contain
+selected active records and are not a full database/upload backup. Read the
+retention and recovery documentation before production use.
 
 ## License
 
