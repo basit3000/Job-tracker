@@ -1,0 +1,12 @@
+{% macro field(f, placeholder="", control_class="form-control") -%}
+<div class="mb-3">
+  {{ f.label(class="form-label") }}
+  {{ f(class=control_class + (" is-invalid" if f.errors else ""), placeholder=placeholder, **kwargs) }}
+  {% for error in f.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+  {% if caller is defined %}{{ caller() }}{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro csrf_field() -%}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}

@@ -1,57 +1,144 @@
+from flask import current_app
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed
+from flask_wtf.file import FileAllowed, FileField
 from wtforms import (
-    StringField,
     PasswordField,
+    SelectField,
+    StringField,
     SubmitField,
     TextAreaField,
-    SelectField,
 )
 from wtforms.validators import (
+    URL,
     DataRequired,
     Email,
     EqualTo,
     Length,
     Optional,
-    URL,
+    ValidationError,
 )
 
-from app.models import JOB_STATUSES
+from app.models import JOB_STATUSES, JobApplication, User
+from app.utils import is_http_url
+
+PASSWORD_MIN_LENGTH = 8
+PASSWORD_MAX_LENGTH = 1024
 
 
-class RegistrationForm(FlaskForm):
-    email = StringField("Email", validators=[DataRequired(), Email(), Length(max=120)])
+def strip_text(value):
+    return value.strip() if value else value
+
+
+def normalize_email(value):
+    return value.strip().lower() if value else value
+
+
+def http_url(_form, field):
+    if not is_http_url(field.data):
+        raise ValidationError("Enter a valid HTTP or HTTPS URL.")
+
+
+def allowed_resume(_form, field):
+    extensions = sorted(current_app.config["ALLOWED_UPLOAD_EXTENSIONS"])
+    FileAllowed(
+        extensions,
+        f"Documents only ({', '.join(extensions)}).",
+    )(_form, field)
+
+
+def _job_text_field(label, column, *, required=False, validators=()):
+    """Keep text normalization and length checks aligned with the model."""
+    return StringField(
+        label,
+        filters=[strip_text],
+        validators=[
+            DataRequired() if required else Optional(),
+            Length(max=column.type.length),
+            *validators,
+        ],
+    )
+
+
+class AccountForm(FlaskForm):
+    """Shared email normalization and bounded password inputs."""
+
+    email = StringField(
+        "Email",
+        filters=[normalize_email],
+        validators=[
+            DataRequired(),
+            Length(max=User.email.type.length),
+            Email(),
+        ],
+    )
     password = PasswordField(
         "Password",
-        validators=[DataRequired(), Length(min=8, message="Password must be at least 8 characters.")],
+        validators=[DataRequired(), Length(max=PASSWORD_MAX_LENGTH)],
+    )
+
+
+class RegistrationForm(AccountForm):
+    password = PasswordField(
+        "Password",
+        validators=[
+            DataRequired(),
+            Length(min=PASSWORD_MIN_LENGTH, max=PASSWORD_MAX_LENGTH),
+        ],
     )
     confirm = PasswordField(
         "Confirm Password",
-        validators=[DataRequired(), EqualTo("password", message="Passwords must match.")],
+        validators=[
+            DataRequired(),
+            Length(max=PASSWORD_MAX_LENGTH),
+            EqualTo("password", message="Passwords must match."),
+        ],
     )
     submit = SubmitField("Create account")
 
 
-class LoginForm(FlaskForm):
-    email = StringField("Email", validators=[DataRequired(), Email()])
-    password = PasswordField("Password", validators=[DataRequired()])
+class LoginForm(AccountForm):
     submit = SubmitField("Log in")
 
 
 class JobApplicationForm(FlaskForm):
-    job_title = StringField("Job Title", validators=[DataRequired(), Length(max=128)])
-    company = StringField("Company", validators=[DataRequired(), Length(max=128)])
-    location = StringField("Location", validators=[Optional(), Length(max=128)])
-    salary = StringField("Salary", validators=[Optional(), Length(max=64)])
-    job_url = StringField(
-        "Job Posting URL",
-        validators=[Optional(), URL(message="Enter a valid URL."), Length(max=512)],
+    job_title = _job_text_field(
+        "Job Title",
+        JobApplication.job_title,
+        required=True,
     )
-    contact_person = StringField("Contact Person", validators=[Optional(), Length(max=128)])
-    status = SelectField("Status", choices=[(s, s) for s in JOB_STATUSES], validators=[DataRequired()])
+    company = _job_text_field(
+        "Company",
+        JobApplication.company,
+        required=True,
+    )
+    location = _job_text_field(
+        "Location",
+        JobApplication.location,
+    )
+    salary = _job_text_field(
+        "Salary",
+        JobApplication.salary,
+    )
+    job_url = _job_text_field(
+        "Job Posting URL",
+        JobApplication.job_url,
+        validators=[
+            URL(message="Enter a valid URL."),
+            http_url,
+        ],
+    )
+    contact_person = _job_text_field(
+        "Contact Person",
+        JobApplication.contact_person,
+    )
+    status = SelectField(
+        "Status",
+        choices=[(s, s) for s in JOB_STATUSES],
+        validators=[DataRequired()],
+    )
     notes = TextAreaField("Notes", validators=[Optional()])
     resume = FileField(
         "Resume",
-        validators=[FileAllowed(["pdf", "doc", "docx", "rtf", "txt"], "Documents only (pdf, doc, docx, rtf, txt).")],
+        validators=[allowed_resume],
     )
     submit = SubmitField("Save")
