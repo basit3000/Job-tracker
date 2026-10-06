@@ -141,7 +141,9 @@ def layout(sheet, header):
     ]
     data = [
         (number, row + [""] * (width - len(row)))
-        for number, row in enumerate(rows[header:], start=header + 1)
+        for number, row in enumerate(
+            rows[header:], start=header + sheet.get("start_row", 1)
+        )
         if any(value.strip() for value in row)
     ]
     if len(data) > MAX_ROWS:

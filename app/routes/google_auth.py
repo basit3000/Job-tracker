@@ -70,7 +70,7 @@ def callback():
                 raise GoogleAccountError("Google did not grant Sheets access.")
             batch = create_batch(
                 current_user.id,
-                read_private_sheet(flow["sheet"], access_token),
+                read_private_sheet(flow["sheet"], access_token, flow["range"]),
             )
             return redirect(url_for("imports.mapping", batch_id=batch.id))
         if flow["intent"] == "link":

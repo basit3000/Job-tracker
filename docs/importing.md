@@ -15,6 +15,20 @@ Sign in and choose **Import applications** from your account menu, or open
 - Choose **Google Sheets private access** to authorize a selected spreadsheet
   without changing its sharing permissions. File download/upload and copy/paste
   remain available when Google OAuth is unconfigured.
+- For either Google Sheets source, optionally enter an exact cell selection such
+  as `B4:N200`, including its headings. Source row numbers in the preview refer
+  to the actual spreadsheet; the mapping screen's header setting is relative to
+  the selected range. Selections allow at most 60 columns and 1,030 rows. Public
+  Sheets exports are cropped locally within the 5 MB download limit; authorized
+  Sheets requests fetch the exact range from the API.
+- Choose **Notion database or data source**, paste its link/ID and a private
+  Notion connection token, and share the database with that connection. The
+  server uses Notion API version `2025-09-03` to discover database data sources
+  and read their pages, with bounded pagination. Choose a data source on the
+  mapping screen and map its properties just like spreadsheet columns. Common
+  text, status/select, date, number, URL, email and phone properties are supported.
+  Tokens for one-time imports stay in request memory and are never saved in a
+  preview, browser session, or response.
 
 Files are limited to 5 MB, 60 columns, 10 tabs, 1,000 data rows per selected tab,
 30 title/header rows, and 5,000 total workbook rows. Expanded archive/data size is

@@ -115,6 +115,9 @@ class GoogleLoginForm(FlaskForm):
     sheet_url = StringField(
         "Google Sheets link", validators=[Optional(), Length(max=2048)]
     )
+    cell_range = StringField(
+        "Cell range", validators=[Optional(), Length(max=40)]
+    )
     password = PasswordField(
         "Current password",
         validators=[Optional(), Length(max=PASSWORD_MAX_LENGTH)],

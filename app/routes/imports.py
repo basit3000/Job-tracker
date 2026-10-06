@@ -46,7 +46,9 @@ from app.import_service import (
     save_options,
 )
 from app.models import JOB_STATUSES
+from app.notion_sources import notion_id, read_notion
 from app.record_updates import lock_account
+from app.sheet_ranges import sheet_range
 
 imports = Blueprint("imports", __name__)
 
@@ -62,7 +64,19 @@ def source_tables():
         return read_file(request.form.get("text", "").encode(), "table.tsv")
     if source == "public":
         return read_public_sheet(
-            sheet_reference(request.form.get("sheet_url", ""))
+            sheet_reference(request.form.get("sheet_url", "")),
+            sheet_range(request.form.get("cell_range", "")),
+        )
+    if source == "notion":
+        kind = request.form.get("notion_kind", "database")
+        if kind not in {"database", "data_source"}:
+            import_error("Choose a Notion database or data source.")
+        return read_notion(
+            {
+                "id": notion_id(request.form.get("notion_url", "")),
+                "kind": kind,
+            },
+            request.form.get("notion_token", ""),
         )
     import_error("Choose a supported source.")
 
@@ -85,6 +99,7 @@ def index():
                         formdata=None,
                         intent="sheets",
                         sheet_url=request.form.get("sheet_url", ""),
+                        cell_range=request.form.get("cell_range", ""),
                     )
                 )
             batch = create_batch(current_user.id, source_tables())

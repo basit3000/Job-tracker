@@ -52,11 +52,14 @@ def start_google_flow(form):
     if sheets and not current_user.is_authenticated:
         raise GoogleAccountError("Sign in before importing a private sheet.")
     sheet = None
+    selection = None
     oauth_options = {}
     if sheets:
         from app.google_sheets import SHEETS_SCOPE, sheet_reference
+        from app.sheet_ranges import sheet_range
 
         sheet = sheet_reference(form.sheet_url.data or "")
+        selection = sheet_range(form.cell_range.data)
         if sheet["published"]:
             raise GoogleAccountError(
                 "Use the normal share URL for private sheet access."
@@ -89,6 +92,7 @@ def start_google_flow(form):
         "intent": form.intent.data,
         "user_id": current_user.id if link or sheets else None,
         "sheet": sheet,
+        "range": selection,
         "next": form.next.data if is_safe_redirect(form.next.data) else None,
     }
     return response

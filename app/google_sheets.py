@@ -14,6 +14,7 @@ from app.import_readers import (
     table,
     validated_tables,
 )
+from app.sheet_ranges import selected_csv
 
 SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
 API_ROOT = "https://sheets.googleapis.com/v4/spreadsheets/"
@@ -51,9 +52,15 @@ def sheet_reference(value):
     return {"id": match[2], "published": bool(match[1]), "gid": gid}
 
 
-def bounded_response(response):
+def bounded_response(response, *, provider="Google Sheets"):
     with response:
         if response.status_code != 200:
+            if provider == "Notion":
+                import_error(
+                    "Notion could not read this source. Check the token and "
+                    "share the database with your Notion connection. "
+                    "If rate limited, try again later."
+                )
             import_error(
                 "Google could not read this sheet. Check access, authorize "
                 "private access, or download it as XLSX/CSV."
@@ -63,7 +70,7 @@ def bounded_response(response):
             data.extend(chunk)
             if len(data) > MAX_BYTES:
                 import_error(
-                    "The Google Sheets response exceeds 5 MB. "
+                    f"The {provider} response exceeds 5 MB. "
                     "Import a smaller sheet."
                 )
         return bytes(data)
@@ -90,7 +97,7 @@ def allowed_export_redirect(url):
     )
 
 
-def read_public_sheet(reference):
+def read_public_sheet(reference, selection=None):
     path = (
         f"e/{reference['id']}/pub"
         if reference["published"]
@@ -117,7 +124,12 @@ def read_public_sheet(reference):
                         "This sheet requires Google authorization. "
                         "Choose private Sheets access or upload an export."
                     )
-                return read_file(bounded_response(response), "sheet.csv")
+                data = bounded_response(response)
+                return (
+                    selected_csv(data, selection)
+                    if selection
+                    else read_file(data, "sheet.csv")
+                )
             target = urljoin(url, response.headers.get("Location", ""))
             response.close()
             if not allowed_export_redirect(target):
@@ -162,7 +174,7 @@ def api_json(path, access_token, params):
         raise google_unavailable() from error
 
 
-def read_private_sheet(reference, access_token):
+def read_private_sheet(reference, access_token, selection=None):
     if reference["published"]:
         import_error(
             "Private access needs the normal spreadsheet share URL, "
@@ -184,11 +196,15 @@ def read_private_sheet(reference, access_token):
         )
     tables = []
     for sheet in sheets:
-        range_name = "'" + sheet["title"].replace("'", "''") + "'!A1:BI1031"
+        cells = selection["a1"] if selection else "A1:BI1031"
+        range_name = "'" + sheet["title"].replace("'", "''") + "'!" + cells
         values = api_json(
             reference["id"] + "/values/" + quote(range_name, safe=""),
             access_token,
             {"valueRenderOption": "FORMATTED_VALUE"},
         )
-        tables.append(table(sheet["title"], values.get("values", [])))
+        result = table(sheet["title"], values.get("values", []))
+        result["sheet_id"] = str(sheet["sheetId"])
+        result["start_row"] = selection["start_row"] if selection else 1
+        tables.append(result)
     return validated_tables(tables)

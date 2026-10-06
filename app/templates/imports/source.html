@@ -12,6 +12,7 @@
       <option value="file" {{ 'selected' if request.form.get('source', 'file') == 'file' }}>Upload a file</option>
       <option value="paste" {{ 'selected' if request.form.get('source') == 'paste' }}>Paste a table</option>
       <option value="public" {{ 'selected' if request.form.get('source') == 'public' }}>Google Sheets shared link</option>
+      <option value="notion" {{ 'selected' if request.form.get('source') == 'notion' }}>Notion database or data source</option>
       {% if config.GOOGLE_LOGIN_ENABLED %}<option value="private" {{ 'selected' if request.form.get('source') == 'private' }}>Google Sheets private access</option>{% endif %}
     </select>
   </div>
@@ -24,9 +25,24 @@
   </div>
   <div class="mb-3" data-import-source="public private"><label for="sheet_url" class="form-label">Google Sheets link</label>
     <input id="sheet_url" name="sheet_url" class="form-control" type="url" maxlength="2048" placeholder="https://docs.google.com/spreadsheets/d/.../edit" value="{{ request.form.get('sheet_url', '') }}">
+    <label for="cell_range" class="form-label mt-2">Cell range (optional)</label>
+    <input id="cell_range" name="cell_range" class="form-control" maxlength="40" placeholder="B4:N200" value="{{ request.form.get('cell_range', '') }}">
+    <p class="form-text">Include the heading row. Leave empty to read the tab. Header row numbers on the next screen are relative to this selection.</p>
     <p class="form-text">Shared links read the linked tab. Private access asks Google for read-only Sheets access once for this import. You can also keep sharing private and upload a downloaded file.</p>
   </div>
   {% if not config.GOOGLE_LOGIN_ENABLED %}<p class="form-text">Private Google authorization needs the platform's Google OAuth configuration. File uploads and pasted Google Sheets cells work immediately.</p>{% endif %}
+  <div class="mb-3" data-import-source="notion">
+    <label for="notion_kind" class="form-label">Notion source type</label>
+    <select id="notion_kind" name="notion_kind" class="form-select">
+      <option value="database">Database link / ID</option>
+      <option value="data_source" {{ 'selected' if request.form.get('notion_kind') == 'data_source' }}>Data source ID</option>
+    </select>
+    <label for="notion_url" class="form-label mt-2">Database link or data source ID</label>
+    <input id="notion_url" name="notion_url" class="form-control" maxlength="2048" value="{{ request.form.get('notion_url', '') }}">
+    <label for="notion_token" class="form-label mt-2">Private Notion connection token</label>
+    <input id="notion_token" name="notion_token" class="form-control" type="password" autocomplete="off" maxlength="4096">
+    <p class="form-text">Share this database with your Notion connection and grant read access. This one-time import does not save the token. Choose a data source and map properties next.</p>
+  </div>
   <button class="btn btn-primary" type="submit">Read source</button>
 </form>
 </div></section>
