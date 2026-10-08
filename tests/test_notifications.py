@@ -99,6 +99,18 @@ def test_due_time_opt_out_and_once_per_day(app, users, mail):
         assert run_due_reminders(NOW + timedelta(days=1))["sent"] == 1
 
 
+def test_bounded_reminders_continue_with_remaining_users(app, users, mail):
+    with app.app_context():
+        for user_id in users:
+            save_preferences(user_id, True, "UTC", 18)
+        assert run_due_reminders(NOW, limit=1)["sent"] == 1
+        assert run_due_reminders(NOW, limit=1)["sent"] == 1
+        assert run_due_reminders(NOW, limit=1)["sent"] == 0
+        assert mail.call_count == 2
+        with pytest.raises(ValueError, match="positive"):
+            run_due_reminders(NOW, limit=0)
+
+
 @pytest.mark.parametrize(
     "status,day,deleted,sends",
     [

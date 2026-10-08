@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from flask import Flask, request, url_for
 
 from app.cli import register_cli
+from app.deployment import configure_deployment
 from app.errors import register_error_handlers
 from app.extensions import (
     csrf,
@@ -22,6 +23,7 @@ from app.uploads import resume_upload_help
 def create_app(config_object="config.Config"):
     app = Flask(__name__, template_folder="templates")
     app.config.from_object(config_object)
+    configure_deployment(app)
     _configure_storage(app)
     _initialize_extensions(app)
     _register_blueprints(app)
@@ -41,7 +43,8 @@ def _configure_storage(app):
         )
 
     app.config["UPLOAD_FOLDER"] = os.path.abspath(app.config["UPLOAD_FOLDER"])
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    if app.config["UPLOAD_STORAGE"] == "filesystem":
+        os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 
 def _initialize_extensions(app):
@@ -72,6 +75,7 @@ def _register_blueprints(app):
     from app.routes.jobs import jobs
     from app.routes.main import main
     from app.routes.notifications import notifications
+    from app.routes.operations import operations
     from app.routes.sources import sources
 
     for blueprint in (
@@ -86,6 +90,7 @@ def _register_blueprints(app):
         exports,
         imports,
         sources,
+        operations,
     ):
         app.register_blueprint(blueprint)
 
