@@ -7,20 +7,30 @@ from flask import current_app, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 
+class DeploymentConfigurationError(ValueError):
+    """An actionable startup message which never includes configured values."""
+
+
 def configure_deployment(app):
     config = app.config
     if config["UPLOAD_STORAGE"] not in {"filesystem", "s3"}:
-        raise ValueError("UPLOAD_STORAGE must be filesystem or s3.")
+        raise DeploymentConfigurationError(
+            "UPLOAD_STORAGE must be filesystem or s3."
+        )
     if config["UPLOAD_STORAGE"] == "s3":
         _validate_s3(config)
     secret = config.get("CRON_SECRET")
     if secret and len(secret) < 32:
-        raise ValueError("CRON_SECRET must contain at least 32 characters.")
+        raise DeploymentConfigurationError(
+            "CRON_SECRET must contain at least 32 characters."
+        )
     if config.get("PRODUCTION"):
         _validate_production(config)
     counts = (config["PROXY_FOR_COUNT"], config["PROXY_PROTO_COUNT"])
     if any(count < 0 for count in counts):
-        raise ValueError("Proxy header counts must be nonnegative.")
+        raise DeploymentConfigurationError(
+            "Proxy header counts must be nonnegative."
+        )
     if any(counts):
         app.wsgi_app = ProxyFix(
             app.wsgi_app,
@@ -44,9 +54,13 @@ def client_address():
 
 def _validate_s3(config):
     if not config.get("S3_BUCKET"):
-        raise ValueError("Set S3_BUCKET for private resume storage.")
+        raise DeploymentConfigurationError(
+            "Set S3_BUCKET for private resume storage."
+        )
     if config["S3_ADDRESSING_STYLE"] not in {"virtual", "path", "auto"}:
-        raise ValueError("S3_ADDRESSING_STYLE must be virtual, path or auto.")
+        raise DeploymentConfigurationError(
+            "S3_ADDRESSING_STYLE must be virtual, path or auto."
+        )
     endpoint = config.get("S3_ENDPOINT_URL")
     if endpoint:
         url = urlsplit(endpoint)
@@ -58,33 +72,39 @@ def _validate_s3(config):
             or url.query
             or url.fragment
         ):
-            raise ValueError("S3_ENDPOINT_URL must be an HTTPS endpoint.")
+            raise DeploymentConfigurationError(
+                "S3_ENDPOINT_URL must be an HTTPS endpoint."
+            )
     credentials = (
         config.get("S3_ACCESS_KEY_ID"),
         config.get("S3_SECRET_ACCESS_KEY"),
     )
     if any(credentials) and not all(credentials):
-        raise ValueError(
+        raise DeploymentConfigurationError(
             "Set both S3 credential variables or use an IAM role."
         )
 
 
 def _validate_production(config):
     if config.get("DEBUG") or config.get("ALLOW_INSECURE_LOCAL_API"):
-        raise ValueError(
+        raise DeploymentConfigurationError(
             "Disable debug mode and insecure API access in production."
         )
     if not config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-        raise ValueError("Set DATABASE_URL to a durable PostgreSQL database.")
+        raise DeploymentConfigurationError(
+            "Set DATABASE_URL to a durable PostgreSQL database."
+        )
     if not config["RATELIMIT_STORAGE_URI"].startswith(
         ("redis://", "rediss://")
     ):
-        raise ValueError("Set RATELIMIT_STORAGE_URI to shared Redis storage.")
+        raise DeploymentConfigurationError(
+            "Set RATELIMIT_STORAGE_URI to shared Redis storage."
+        )
     if (
         not config["SESSION_COOKIE_SECURE"]
         or not config["REMEMBER_COOKIE_SECURE"]
     ):
-        raise ValueError(
+        raise DeploymentConfigurationError(
             "Enable secure session and remember cookies in production."
         )
     url = urlsplit(config["APP_BASE_URL"])
@@ -97,13 +117,15 @@ def _validate_production(config):
         or url.fragment
         or url.path not in {"", "/"}
     ):
-        raise ValueError("Set APP_BASE_URL to the public HTTPS origin.")
+        raise DeploymentConfigurationError(
+            "Set APP_BASE_URL to the public HTTPS origin."
+        )
     if config["UPLOAD_STORAGE"] == "filesystem":
         if config["DEPLOYMENT_PLATFORM"] == "vercel":
-            raise ValueError(
+            raise DeploymentConfigurationError(
                 "Vercel requires UPLOAD_STORAGE=s3 for durable resumes."
             )
         if not config["UPLOAD_FOLDER_EXPLICIT"]:
-            raise ValueError(
+            raise DeploymentConfigurationError(
                 "Set UPLOAD_FOLDER to an attached persistent volume."
             )

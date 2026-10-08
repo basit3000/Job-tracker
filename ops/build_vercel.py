@@ -1,9 +1,33 @@
-"""Publish public static assets to Vercel's CDN directory."""
+"""Check Flask startup before publishing public static assets to Vercel."""
 
+import sys
 from pathlib import Path
 from shutil import copyfile
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def validate_startup():
+    # Executing a file in ops/ otherwise places only ops/ on the import path.
+    sys.path.insert(0, str(ROOT))
+    try:
+        from app.deployment import DeploymentConfigurationError
+
+        try:
+            from wsgi import app
+        except DeploymentConfigurationError as error:
+            raise SystemExit(
+                f"Deployment configuration error: {error}"
+            ) from None
+    except Exception as error:
+        # Invalid URLs and provider exceptions can contain secret values.
+        raise SystemExit(
+            f"Flask startup check failed ({type(error).__name__}). "
+            "Check runtime dependencies and environment variable formats."
+        ) from None
+    if not callable(app):
+        raise SystemExit("The WSGI entrypoint must expose a callable app.")
+    print("Flask startup verified; connectivity is checked separately.")
 
 
 def build_static(root=ROOT):
@@ -22,4 +46,5 @@ def build_static(root=ROOT):
 
 
 if __name__ == "__main__":
+    validate_startup()
     build_static()

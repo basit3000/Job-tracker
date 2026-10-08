@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from flask import Flask, request, url_for
 
 from app.cli import register_cli
-from app.deployment import configure_deployment
+from app.deployment import DeploymentConfigurationError, configure_deployment
 from app.errors import register_error_handlers
 from app.extensions import (
     csrf,
@@ -37,7 +37,7 @@ def create_app(config_object="config.Config"):
 def _configure_storage(app):
     secret_key = app.config.get("SECRET_KEY")
     if not isinstance(secret_key, (str, bytes)) or len(secret_key) < 32:
-        raise ValueError(
+        raise DeploymentConfigurationError(
             "Set SECRET_KEY to a private random value "
             "of at least 32 characters."
         )

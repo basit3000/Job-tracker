@@ -46,6 +46,3 @@ testpaths = ["tests"]
 
 [tool.vercel]
 entrypoint = "wsgi:app"
-
-[tool.vercel.scripts]
-build = "python ops/build_vercel.py"
