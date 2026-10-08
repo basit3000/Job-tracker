@@ -36,7 +36,10 @@ Primary references:
   Avoid logging filesystem exception details during resume cleanup.
 - Redact URL queries and unsubscribe tokens from Werkzeug/Gunicorn access logs,
   including Gunicorn's separate query, path, and referrer fields. Send
-  `Referrer-Policy: no-referrer` on responses.
+  `Referrer-Policy: same-origin` on successful HTML pages so HTTPS form
+  submissions pass Flask-WTF's origin check without sending referrers to
+  external sites. Other responses, including OAuth callback and download
+  redirects, use `no-referrer`.
 - Serve Bootstrap, icons, and Inter from local static files. Restrict scripts,
   fonts, and stylesheets to the app's origin. Preserve licenses and pinned asset
   provenance/checksums in `app/static/vendor/`. Inline chart styles remain

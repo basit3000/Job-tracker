@@ -157,19 +157,28 @@ def test_main_browser_flows(app, users, tmp_path, viewport):
     reason="Set RUN_BROWSER_TESTS=1 and install Chromium.",
 )
 @pytest.mark.parametrize("width", [1440, 390], ids=["desktop", "mobile"])
+@pytest.mark.parametrize("scheme", ["http", "https"])
 def test_public_registration_and_google_browser_flows(
     app_factory,
     monkeypatch,
     width,
+    scheme,
 ):
     from playwright.sync_api import expect, sync_playwright
 
     provider = mock_google_transport(monkeypatch)
-    app = app_factory(**GOOGLE_CONFIG)
-    server = make_server(
-        "127.0.0.1", 0, app, threaded=True, request_handler=QuietHandler
+    app = app_factory(
+        **GOOGLE_CONFIG, SESSION_COOKIE_SECURE=scheme == "https"
     )
-    origin = f"http://localhost:{server.server_port}"
+    server = make_server(
+        "127.0.0.1",
+        0,
+        app,
+        threaded=True,
+        request_handler=QuietHandler,
+        ssl_context="adhoc" if scheme == "https" else None,
+    )
+    origin = f"{scheme}://localhost:{server.server_port}"
     app.config["GOOGLE_REDIRECT_URI"] = origin + "/auth/google/callback"
     provider.redirect_uri = app.config["GOOGLE_REDIRECT_URI"]
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -183,6 +192,7 @@ def test_public_registration_and_google_browser_flows(
                 viewport={"width": width, "height": 1000},
                 is_mobile=width < 600,
                 has_touch=width < 600,
+                ignore_https_errors=scheme == "https",
             )
             page.on("pageerror", lambda error: errors.append(str(error)))
 
