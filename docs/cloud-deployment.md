@@ -129,7 +129,10 @@ their own trusted headers. [Railway ingress](https://docs.railway.com/networking
    public TLS connection endpoints. Keep preview environments on separate test
    databases/buckets/keys from production.
 2. Import the repository using the Flask framework preset and root directory.
-   `pyproject.toml` selects `wsgi:app`; `vercel.json` configures a 300-second
+   `pyproject.toml` declares the runtime dependencies and selects `wsgi:app`;
+   `uv.lock` pins their resolved dependencies. Keep runtime pins in
+   `requirements.txt` aligned when updating them, then run `uv lock` with Python
+   3.12 before committing. `vercel.json` configures a 300-second
    function duration. Enable Fluid compute and ensure your plan supports this
    duration. The build script publishes only public static assets, preserving
    existing `/static/...` URLs. `.vercelignore` excludes local environments,

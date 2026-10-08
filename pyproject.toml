@@ -1,3 +1,36 @@
+[project]
+name = "job-tracker"
+version = "0.1.0"
+description = "Private job application tracker built with Flask"
+requires-python = ">=3.11"
+# Keep these runtime pins aligned with requirements.txt for Docker/pip installs.
+dependencies = [
+    "Flask==3.1.3",
+    "Werkzeug==3.1.9",
+    "Flask-SQLAlchemy==3.1.1",
+    "Flask-Login==0.6.3",
+    "Flask-WTF==1.2.2",
+    "Flask-Limiter[redis]==4.1.1",
+    "WTForms==3.2.1",
+    "email-validator==2.2.0",
+    "python-dotenv==1.2.2",
+    "Flask-Migrate==4.0.7",
+    "gunicorn==23.0.0",
+    "psycopg2-binary==2.9.13",
+    "Authlib==1.8.0",
+    "cryptography==50.0.2",
+    "requests==2.34.2",
+    "openpyxl==3.1.5",
+    "xlrd==2.0.2",
+    "defusedxml==0.7.1",
+    "tzdata==2026.5",
+    "boto3==1.43.109",
+]
+
+[tool.uv]
+# This is an application, not an installable wheel with package discovery.
+package = false
+
 [tool.ruff]
 target-version = "py311"
 line-length = 79
