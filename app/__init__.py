@@ -104,7 +104,14 @@ def _configure_templates(app):
 
     @app.context_processor
     def inject_globals():
+        from flask_login import current_user
+
+        from app.notification_center import unread_count
+
         return {
+            "unread_notifications": unread_count(current_user.id)
+            if current_user.is_authenticated
+            else 0,
             "current_year": datetime.now(timezone.utc).year,
             "resume_upload_help": resume_upload_help(),
             "pagination_url": pagination_url,

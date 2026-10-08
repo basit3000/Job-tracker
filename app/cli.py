@@ -86,6 +86,7 @@ def register_cli(app):
     app.cli.add_command(cleanup_imports)
     app.cli.add_command(sync_sources)
     app.cli.add_command(send_reminders)
+    app.cli.add_command(process_notifications)
 
 
 @click.command("cleanup-imports")
@@ -165,6 +166,27 @@ def sync_sources(watch):
         click.echo(
             f"Synced {result['synced']} sources; {result['failed']} failed."
         )
+
+
+@click.command("process-notifications")
+@click.option(
+    "--watch", is_flag=True, help="Check notifications every minute."
+)
+@with_appcontext
+def process_notifications(watch):
+    """Create scheduled inbox notifications and send opted-in emails."""
+    from app.notification_center import run_notification_cycle
+    from app.notifications import watch_reminders
+
+    if watch:
+        watch_reminders(current_app._get_current_object())
+    else:
+        results = run_notification_cycle()
+        for channel, result in results.items():
+            click.echo(
+                f"{channel}: sent {result['sent']}; "
+                f"failed {result['failed']}; skipped {result['skipped']}."
+            )
 
 
 @click.command("send-reminders")

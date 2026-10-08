@@ -42,17 +42,20 @@ def mail(app, monkeypatch):
 def test_preferences_private_opt_in_and_validation(
     app, users, logged_client, client
 ):
-    assert app.test_client().get("/notifications").status_code == 302
-    response = logged_client.get("/notifications")
+    assert app.test_client().get("/notifications/settings").status_code == 302
+    response = logged_client.get("/notifications/settings")
     assert response.status_code == 200
     assert b"Email delivery is not configured" in response.data
-    token = csrf_token(logged_client, "/notifications")
+    token = csrf_token(logged_client, "/notifications/settings")
     data = {
         "email_enabled": "y",
         "timezone_name": "Europe/Berlin",
         "reminder_hour": "20",
     }
-    assert logged_client.post("/notifications", data=data).status_code == 400
+    assert (
+        logged_client.post("/notifications/settings", data=data).status_code
+        == 400
+    )
     data["csrf_token"] = token
     for changes in (
         {"timezone_name": "Invalid/Zone"},
@@ -60,11 +63,14 @@ def test_preferences_private_opt_in_and_validation(
     ):
         assert (
             logged_client.post(
-                "/notifications", data={**data, **changes}
+                "/notifications/settings", data={**data, **changes}
             ).status_code
             == 422
         )
-    assert logged_client.post("/notifications", data=data).status_code == 302
+    assert (
+        logged_client.post("/notifications/settings", data=data).status_code
+        == 302
+    )
     with app.app_context():
         preference = db.session.get(NotificationPreference, users[0])
         assert preference.email_enabled
@@ -78,9 +84,14 @@ def test_preferences_private_opt_in_and_validation(
             )
         )
         db.session.commit()
-    assert b"2001-01-01" not in logged_client.get("/notifications").data
+    assert (
+        b"2001-01-01" not in logged_client.get("/notifications/settings").data
+    )
     data.pop("email_enabled")
-    assert logged_client.post("/notifications", data=data).status_code == 302
+    assert (
+        logged_client.post("/notifications/settings", data=data).status_code
+        == 302
+    )
     with app.app_context():
         assert not db.session.get(
             NotificationPreference, users[0]

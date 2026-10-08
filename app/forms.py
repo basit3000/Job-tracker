@@ -42,6 +42,17 @@ def normalize_email(value):
 
 
 class NotificationForm(FlaskForm):
+    social_in_app = BooleanField("People: in-app notifications", default=True)
+    social_email = BooleanField("People: email notifications")
+    followups_in_app = BooleanField(
+        "Follow-ups: in-app notifications", default=True
+    )
+    followups_email = BooleanField("Follow-ups: email notifications")
+    sources_in_app = BooleanField(
+        "Import & sync: in-app notifications", default=True
+    )
+    sources_email = BooleanField("Import & sync: email notifications")
+    reminders_in_app = BooleanField("Daily reminder: in-app notifications")
     email_enabled = BooleanField("Email me when I haven't applied today")
     timezone_name = SelectField("Your time zone", validators=[DataRequired()])
     reminder_hour = SelectField(

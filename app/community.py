@@ -11,6 +11,7 @@ from app.database import database_transaction
 from app.extensions import db
 from app.gamification import application_stats, submitted_query
 from app.models import Friendship, JobApplication, User
+from app.notification_center import add_notification
 from app.record_updates import lock_account, write_application
 from app.utils import is_http_url
 
@@ -87,6 +88,13 @@ def request_friendship(actor, target):
                     requested_by_id=actor.id,
                 )
             )
+            add_notification(
+                target.id,
+                "social",
+                "New friend request",
+                f"{actor.profile_name} sent you a friend request. "
+                "Visit People to accept or decline.",
+            )
     except IntegrityError as error:
         raise ServiceError(
             "friendship_exists", "A friendship or request already exists.", 409
@@ -107,6 +115,7 @@ def change_friendship(user_id, friendship_id, action):
     else:
         raise ServiceError("invalid_action", "Unknown friendship action.", 422)
     with database_transaction():
+        link = query.first() if action == "accept" else None
         changed = (
             query.update({"status": "accepted"}, synchronize_session=False)
             if action == "accept"
@@ -117,6 +126,15 @@ def change_friendship(user_id, friendship_id, action):
                 "friendship_unavailable",
                 "That request is no longer available.",
                 404,
+            )
+        if action == "accept" and link:
+            actor = db.session.get(User, user_id)
+            add_notification(
+                link.requested_by_id,
+                "social",
+                "Friend request accepted",
+                f"{actor.profile_name} accepted your friend request. "
+                "You can now follow each other's shared progress.",
             )
 
 

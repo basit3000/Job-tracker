@@ -57,23 +57,47 @@ def mail_ready():
         return False
 
 
-def save_preferences(user_id, enabled, timezone_name, hour):
+def save_preferences(user_id, enabled, timezone_name, hour, **channels):
+    from app.models import Notification
+    from app.notification_center import CHANNEL_FIELDS
+
     with database_transaction():
         preference = db.session.get(NotificationPreference, user_id)
         if preference is None:
             preference = NotificationPreference(user_id=user_id)
             db.session.add(preference)
-        if enabled and not preference.email_enabled:
+        if (enabled and not preference.email_enabled) or any(
+            name.endswith("_email") and value and not getattr(preference, name)
+            for name, value in channels.items()
+            if name in CHANNEL_FIELDS
+        ):
             preference.unsubscribe_key = public_id()
         preference.email_enabled = enabled
         preference.timezone_name = timezone_name
         preference.reminder_hour = hour
+        for name in CHANNEL_FIELDS:
+            if name in channels:
+                setattr(preference, name, bool(channels[name]))
+        # Opting out cancels queued mail permanently, even if re-enabled later.
+        for kind in ("social", "followups", "sources"):
+            if not getattr(preference, f"{kind}_email"):
+                Notification.query.filter_by(
+                    user_id=user_id, kind=kind, email_status="pending"
+                ).update({"email_status": "skipped"})
     return preference
 
 
 def disable_reminders(preference):
+    from app.models import Notification
+
     with database_transaction():
         preference.email_enabled = False
+        preference.social_email = False
+        preference.followups_email = False
+        preference.sources_email = False
+        Notification.query.filter_by(
+            user_id=preference.user_id, email_status="pending"
+        ).update({"email_status": "skipped"})
 
 
 def _signer():
@@ -116,10 +140,16 @@ def send_reminder(preference, day):
         "Taking a break is okay too.\n\n"
         f"Open Job Tracker: {base}/dashboard\n\n"
         "You received this because you enabled daily application reminders.\n"
-        f"Manage reminders: {base}/notifications\n"
+        f"Manage reminders: {base}/notifications/settings\n"
         f"Unsubscribe: {base}/notifications/unsubscribe/"
         f"{unsubscribe_token(preference)}\n"
     )
+    send_message(message)
+
+
+def send_message(message):
+    """Shared TLS-only SMTP transport for explicitly opted-in mail."""
+    config = current_app.config
     context = ssl.create_default_context()
     kwargs = {
         "host": config["SMTP_HOST"],
@@ -229,10 +259,12 @@ def _send_claimed_reminder(preference, delivery, now):
 
 
 def watch_reminders(app):
+    from app.notification_center import run_notification_cycle
+
     while True:
         with app.app_context():
             try:
-                run_due_reminders()
+                run_notification_cycle()
             except (SQLAlchemyError, ValueError, KeyError):
                 db.session.rollback()
                 app.logger.warning(

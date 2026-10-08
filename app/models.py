@@ -120,11 +120,74 @@ class NotificationPreference(db.Model):
     )
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
     email_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    social_in_app = db.Column(
+        db.Boolean, nullable=False, default=True, server_default=db.true()
+    )
+    social_email = db.Column(
+        db.Boolean, nullable=False, default=False, server_default=db.false()
+    )
+    followups_in_app = db.Column(
+        db.Boolean, nullable=False, default=True, server_default=db.true()
+    )
+    followups_email = db.Column(
+        db.Boolean, nullable=False, default=False, server_default=db.false()
+    )
+    sources_in_app = db.Column(
+        db.Boolean, nullable=False, default=True, server_default=db.true()
+    )
+    sources_email = db.Column(
+        db.Boolean, nullable=False, default=False, server_default=db.false()
+    )
+    reminders_in_app = db.Column(
+        db.Boolean, nullable=False, default=False, server_default=db.false()
+    )
     timezone_name = db.Column(db.String(64), nullable=False, default="UTC")
     reminder_hour = db.Column(db.Integer, nullable=False, default=20)
     unsubscribe_key = db.Column(
         db.String(36), nullable=False, default=public_id
     )
+
+
+class Notification(db.Model):
+    """Private inbox and durable, opt-in email outbox for one recipient."""
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "user_id", "event_key", name="uq_notification_event"
+        ),
+        db.CheckConstraint(
+            "kind IN ('social','followups','sources','reminders')",
+            name="ck_notification_kind",
+        ),
+        db.CheckConstraint(
+            "email_status IN "
+            "('disabled','pending','claimed','sent','failed','skipped')",
+            name="ck_notification_email_status",
+        ),
+        db.Index(
+            "ix_notification_inbox",
+            "user_id",
+            "in_app",
+            "dismissed_at",
+            "created_at",
+        ),
+        db.Index("ix_notification_outbox", "email_status", "created_at"),
+    )
+    id = db.Column(db.String(36), primary_key=True, default=public_id)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    event_key = db.Column(db.String(128), nullable=False)
+    kind = db.Column(db.String(16), nullable=False)
+    title = db.Column(db.String(120), nullable=False)
+    body = db.Column(db.String(500), nullable=False)
+    in_app = db.Column(db.Boolean, nullable=False)
+    created_at = db.Column(
+        db.DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+    read_at = db.Column(db.DateTime(timezone=True))
+    dismissed_at = db.Column(db.DateTime(timezone=True))
+    expires_at = db.Column(db.DateTime(timezone=True))
+    email_status = db.Column(db.String(8), nullable=False, default="disabled")
+    email_sent_at = db.Column(db.DateTime(timezone=True))
 
 
 class ReminderDelivery(db.Model):

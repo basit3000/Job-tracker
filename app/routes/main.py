@@ -11,6 +11,9 @@ main = Blueprint("main", __name__)
 @main.get("/")
 def home():
     if current_user.is_authenticated:
+        from app.notification_center import refresh_scheduled_notifications
+
+        refresh_scheduled_notifications(current_user.id)
         feed = request.args.get("feed", "discover")
         if feed not in FEEDS:
             feed = "discover"

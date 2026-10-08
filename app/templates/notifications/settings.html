@@ -1,27 +1,46 @@
 {% extends "base.html" %}
 {% from "macros/forms.html" import field %}
-{% block title %}Notifications - Job Tracker{% endblock %}
+{% block title %}Notification settings - Job Tracker{% endblock %}
 {% block content %}
-<h1 class="h3">Notifications</h1>
-<p class="text-muted">A gentle nudge when you want one. You choose when to hear from us.</p>
-{% if not ready %}<div class="alert alert-info" role="status">Email delivery is not configured yet. You can save your preference now; reminders will start once the administrator enables email delivery.</div>{% endif %}
+<div class="notification-heading">
+  <div><h1 class="h3">Notification settings</h1><p>Choose what you hear about, and where.</p></div>
+  <a class="btn btn-outline-primary" href="{{ url_for('notifications.inbox') }}">Back to notifications</a>
+</div>
+{% if not ready %}<div class="alert alert-info" role="status">Email delivery is not configured yet. In-app notifications work now. You can save your email preferences for when delivery is enabled.</div>{% endif %}
 <div class="row g-4">
   <div class="col-lg-7"><section class="card"><div class="card-body">
-    <h2 class="h5">Daily application reminder</h2>
+    <h2 class="h5">Your notification channels</h2>
+    <p class="small text-muted">Email is optional. Selected emails go to {{ current_user.email }}. Every email includes an unsubscribe link.</p>
     <form method="POST">
       {{ form.hidden_tag() }}
-      <div class="form-check my-3">{{ form.email_enabled(class="form-check-input", aria_describedby="reminder-help") }}{{ form.email_enabled.label(class="form-check-label") }}</div>
-      <p id="reminder-help" class="small text-muted">Send to {{ current_user.email }} only if you have no submitted application recorded for that date in your chosen time zone. Shortlisted jobs and applications with unknown dates do not count. At most one email attempt per day.</p>
+      {% for title, description, app_field, email_field in [
+        ('People', 'New friend requests and accepted requests.', form.social_in_app, form.social_email),
+        ('Follow-ups', 'One summary per day when you have due or overdue follow-ups. Follow-up dates use UTC, like your tracker.', form.followups_in_app, form.followups_email),
+        ('Import & sync', 'When an automatic sync first needs attention. Repeated failures stay quiet until the connection recovers.', form.sources_in_app, form.sources_email),
+        ('Daily application reminder', 'A gentle nudge if you have not recorded a submitted application today. Shortlisted jobs and unknown application dates do not count.', form.reminders_in_app, form.email_enabled)
+      ] %}
+      <fieldset class="notification-preference">
+        <legend>{{ title }}</legend><p id="{{ app_field.id }}-help">{{ description }}</p>
+        <div class="notification-channels">
+          <div class="form-check">{{ app_field(class='form-check-input', aria_describedby=app_field.id ~ '-help') }}<label class="form-check-label" for="{{ app_field.id }}">In app<span class="visually-hidden">: {{ title }}</span></label></div>
+          <div class="form-check">{{ email_field(class='form-check-input', aria_describedby=app_field.id ~ '-help') }}<label class="form-check-label" for="{{ email_field.id }}">Email<span class="visually-hidden">: {{ title }}</span></label></div>
+        </div>
+      </fieldset>
+      {% endfor %}
+      <h2 class="h5">Daily reminder schedule</h2>
       {{ field(form.timezone_name, control_class="form-select") }}
       {{ field(form.reminder_hour, control_class="form-select") }}
-      <p class="small text-muted">We check from this time until midnight. Turn reminders off here at any time, or use the unsubscribe link in an email. Activity charts and community streaks use UTC dates.</p>
+      <p class="small text-muted">We check from this time until midnight in your chosen time zone. At most one daily reminder per channel. Activity charts and community streaks use UTC dates.</p>
       {{ form.submit(class="btn btn-primary") }}
     </form>
   </div></section></div>
   <div class="col-lg-5"><section class="card"><div class="card-body">
-    <h2 class="h5">Recent reminders</h2>
-    {% for delivery in history %}<div class="reminder-history-item"><strong>{{ delivery.local_date }}</strong><span class="small">{{ {'sent': 'Sent to email provider', 'failed': 'Delivery could not be confirmed', 'claimed': 'Delivery pending or unconfirmed', 'skipped': 'No longer needed'}[delivery.status] }}</span><small class="text-muted">{{ delivery.timezone_name }}</small></div>{% else %}<p class="text-muted mb-0">No reminders have been attempted yet.</p>{% endfor %}
-    {% if history %}<p class="small text-muted mt-3 mb-0">Showing the latest 10 attempts. Unconfirmed deliveries are not retried that day to avoid duplicate emails.</p>{% endif %}
+    {% set labels = {'pending': 'Queued for email delivery', 'sent': 'Sent to email provider', 'failed': 'Delivery could not be confirmed', 'claimed': 'Delivery pending or unconfirmed', 'skipped': 'No longer needed'} %}
+    <h2 class="h5">Recent notification emails</h2>
+    {% for item in email_history %}<div class="reminder-history-item"><strong>{{ item.title }}</strong><span class="small">{{ labels[item.email_status] }}</span><small class="text-muted">{{ item.created_at.strftime('%b %d, %Y ? %H:%M') }} UTC</small></div>{% else %}<p class="text-muted">No notification emails queued yet.</p>{% endfor %}
+    <h2 class="h5 mt-4">Recent daily reminder emails</h2>
+    {% for delivery in history %}<div class="reminder-history-item"><strong>{{ delivery.local_date }}</strong><span class="small">{{ labels[delivery.status] }}</span><small class="text-muted">{{ delivery.timezone_name }}</small></div>{% else %}<p class="text-muted">No reminders have been attempted yet.</p>{% endfor %}
+    <p class="small text-muted mb-0">Showing the latest 10 of each. Unconfirmed deliveries are not retried, to avoid duplicate emails.</p>
   </div></section></div>
 </div>
 {% endblock %}

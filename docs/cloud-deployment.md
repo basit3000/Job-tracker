@@ -199,7 +199,10 @@ does not provision services, apply migrations, or test their connectivity;
    [Vercel cron authentication](https://vercel.com/docs/cron-jobs/manage-cron-jobs)
 
 The optional `/internal/cron/sources` endpoint processes at most one due source,
-and `/internal/cron/reminders` attempts at most ten due messages. They use the
+and `/internal/cron/reminders` attempts at most ten due daily reminder emails.
+For the full inbox and notification email cycle, run
+`flask --app wsgi.py process-notifications --watch` on an external worker
+sharing the same database. See [notification setup](notifications.md). They use the
 same durable claims as polling workers. Repeated calls continue outstanding work
 without repeating a claimed daily reminder. Use `Authorization: Bearer
 <CRON_SECRET>` from an external scheduler, or add those paths to Vercel cron

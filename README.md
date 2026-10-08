@@ -8,9 +8,11 @@ and external scheduling for frequent syncs/reminders.
 Home brings together a community feed, a brief personal progress summary, friend
 requests, and next steps. **My tracker → Insights** includes a 28-day application
 chart, a 12-week consistency calendar, current/longest streaks, XP, goals, and
-milestone badges. Optional daily email nudges are available in
-**Account → Notifications**. See [email reminder setup](docs/notifications.md)
-for SMTP configuration and the background worker. Email delivery defaults to off.
+milestone badges. The header bell opens a private notification inbox for friend
+activity, due follow-ups, sync issues, and optional daily nudges. Choose in-app
+and opt-in email channels under **Account ? Notification settings**. See
+[notification setup](docs/notifications.md) for SMTP and worker configuration.
+New email categories default to off.
 
 A Flask application for tracking private application records online, independently of
 whether a local Job Scout process is running. It extends this repository's app

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import csrf_field %}
+{% block title %}Notifications - Job Tracker{% endblock %}
+{% block content %}
+<div class="notification-heading">
+  <div><h1 class="h3">Notifications</h1><p>Your people, next steps, and updates in one place.</p></div>
+  <a class="btn btn-outline-primary" href="{{ url_for('notifications.settings') }}"><i class="bi bi-sliders me-2" aria-hidden="true"></i>Notification settings</a>
+</div>
+<div class="notification-toolbar">
+  <nav class="notification-tabs" aria-label="Notification filters">
+    <a href="{{ url_for('notifications.inbox') }}"{% if not unread %} aria-current="page"{% endif %}>All</a>
+    <a href="{{ url_for('notifications.inbox', filter='unread') }}"{% if unread %} aria-current="page"{% endif %}>Unread <span class="ms-2 count-pill">{{ unread_notifications }}</span></a>
+  </nav>
+  <form method="POST" action="{{ url_for('notifications.read_all') }}">{{ csrf_field() }}<button type="submit" class="btn btn-outline-secondary"{% if not unread_notifications %} disabled{% endif %}>Mark all as read</button></form>
+</div>
+{% if pagination.items %}
+<ul class="notification-list" aria-label="Your notifications">
+{% for item in pagination.items %}
+  {% set category, icon, endpoint, values = categories[item.kind] %}
+  <li><article class="notification-card{{ ' is-unread' if not item.read_at }}" aria-labelledby="title-{{ item.id }}">
+    <span class="notification-icon"><i class="bi bi-{{ icon }}" aria-hidden="true"></i></span>
+    <div class="notification-content">
+      <div class="notification-meta"><span>{{ category }}</span><span aria-hidden="true">&middot;</span><time datetime="{{ item.created_at|utc_timestamp }}">{{ item.created_at.strftime('%b %d, %Y · %H:%M') }} UTC</time>{% if not item.read_at %}<strong>Unread</strong>{% endif %}</div>
+      <h2 id="title-{{ item.id }}">{{ item.title }}</h2><p>{{ item.body }}</p>
+      <div class="notification-actions">
+        <form method="POST" action="{{ url_for('notifications.update', notification_id=item.id, action='open') }}">{{ csrf_field() }}<button type="submit" class="btn btn-outline-primary" aria-label="Open {{ category }}: {{ item.title }}">Open {{ category }}</button></form>
+        <form method="POST" action="{{ url_for('notifications.update', notification_id=item.id, action='unread' if item.read_at else 'read') }}">{{ csrf_field() }}<input type="hidden" name="filter" value="{{ 'unread' if unread else 'all' }}"><button type="submit" class="btn btn-outline-secondary" aria-label="Mark {{ item.title }} as {{ 'unread' if item.read_at else 'read' }}">Mark as {{ 'unread' if item.read_at else 'read' }}</button></form>
+        <form method="POST" action="{{ url_for('notifications.update', notification_id=item.id, action='dismiss') }}">{{ csrf_field() }}<button type="submit" class="btn btn-outline-secondary" aria-label="Dismiss {{ item.title }}">Dismiss</button></form>
+      </div>
+    </div>
+  </article></li>
+{% endfor %}
+</ul>
+{% if pagination.pages > 1 %}<nav class="feed-pagination" aria-label="Notification pages">
+  {% if pagination.has_prev %}<a class="btn btn-outline-secondary" href="{{ url_for('notifications.inbox', page=pagination.prev_num, filter='unread' if unread else 'all') }}">Previous</a>{% endif %}
+  <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+  {% if pagination.has_next %}<a class="btn btn-outline-secondary" href="{{ url_for('notifications.inbox', page=pagination.next_num, filter='unread' if unread else 'all') }}">Next</a>{% endif %}
+</nav>{% endif %}
+{% else %}
+<section class="feed-empty"><span class="empty-symbol"><i class="bi bi-bell" aria-hidden="true"></i></span><h2 class="h5">{{ "You're all caught up" if unread else 'A little quieter here, for now' }}</h2><p>{{ 'No unread notifications. Your updates are still in All.' if unread else 'Friend requests, due follow-ups, and sync updates will appear here. Choose what you hear about in notification settings.' }}</p><a class="btn btn-outline-primary" href="{{ url_for('main.home') }}">Back to Home</a></section>
+{% endif %}
+{% endblock %}

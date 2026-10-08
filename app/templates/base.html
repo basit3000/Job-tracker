@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/social.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -55,5 +56,6 @@
   ></script>
   <script src="{{ url_for('static', filename='js/forms.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/navigation.js') }}" defer></script>
+  {% if current_user.is_authenticated %}<script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>{% endif %}
 </body>
 </html>

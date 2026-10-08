@@ -53,6 +53,7 @@ def test_progress_and_notification_preferences(app, users, width):
             page.get_by_label("Email", exact=True).fill("owner@example.com")
             page.get_by_label("Password", exact=True).fill("correct-password")
             page.get_by_role("button", name="Log in", exact=True).click()
+            page.goto(origin + "/dashboard")
             expect(
                 page.get_by_role("heading", name="Applications over time")
             ).to_be_visible()
@@ -75,7 +76,7 @@ def test_progress_and_notification_preferences(app, users, width):
             ).to_be_visible()
             page.get_by_role("link", name="Set a reminder", exact=True).click()
             checkbox = page.get_by_label(
-                "Email me when I haven't applied today"
+                "Email: Daily application reminder", exact=True
             )
             expect(checkbox).not_to_be_checked()
             checkbox.check()

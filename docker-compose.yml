@@ -46,7 +46,7 @@ services:
 
   reminders:
     build: .
-    command: ["flask", "--app", "run.py", "send-reminders", "--watch"]
+    command: ["flask", "--app", "run.py", "process-notifications", "--watch"]
     environment:
       <<: *tracker_environment
       MIGRATION_DATABASE_URL: ""

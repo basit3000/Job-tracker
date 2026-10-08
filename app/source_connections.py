@@ -218,12 +218,22 @@ def complete_google_connection(
 
 
 def record_sync_error(user_id, connection_id, version, message):
+    from app.notification_center import add_notification
+
     with database_transaction():
         lock_account(user_id)
         connection = SourceConnection.query.filter_by(
             id=connection_id, user_id=user_id
         ).first()
         if connection and connection.version == version:
+            if not connection.last_error:
+                add_notification(
+                    user_id,
+                    "sources",
+                    "A connected source needs attention",
+                    "An automatic sync could not finish. Open Import & sync "
+                    "to review the connection and retry.",
+                )
             connection.last_error = message[:256]
             connection.next_sync_at = next_sync(connection)
 
