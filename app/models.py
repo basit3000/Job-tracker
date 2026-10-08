@@ -41,6 +41,13 @@ class User(UserMixin, db.Model):
             "password_hash IS NOT NULL OR google_subject IS NOT NULL",
             name="ck_user_login_method",
         ),
+        db.CheckConstraint(
+            "profile_visibility IN ('private','public')",
+            name="ck_user_profile_visibility",
+        ),
+        db.CheckConstraint(
+            "daily_goal BETWEEN 1 AND 100", name="ck_user_daily_goal"
+        ),
     )
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(254), unique=True, nullable=False, index=True)
@@ -49,6 +56,21 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=_utcnow)
     feed_sequence = db.Column(
         db.BigInteger, nullable=False, default=0, server_default="0"
+    )
+    handle = db.Column(db.String(24), unique=True)
+    display_name = db.Column(db.String(60))
+    bio = db.Column(db.String(280))
+    profile_visibility = db.Column(
+        db.String(7),
+        nullable=False,
+        default="private",
+        server_default="private",
+    )
+    share_jobs = db.Column(
+        db.Boolean, nullable=False, default=False, server_default=db.false()
+    )
+    daily_goal = db.Column(
+        db.Integer, nullable=False, default=5, server_default="5"
     )
 
     applications = db.relationship(
@@ -67,6 +89,10 @@ class User(UserMixin, db.Model):
             self.password_hash, password
         )
 
+    @property
+    def profile_name(self):
+        return self.display_name or self.handle or "Job seeker"
+
     @classmethod
     def find_by_email(cls, email):
         return cls.query.filter_by(email=email).first()
@@ -84,6 +110,45 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f"<User {self.email}>"
+
+
+class Friendship(db.Model):
+    """One canonical pair, with explicit consent before sharing access."""
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "user_low_id", "user_high_id", name="uq_friendship_pair"
+        ),
+        db.CheckConstraint(
+            "user_low_id < user_high_id", name="ck_friendship_order"
+        ),
+        db.CheckConstraint(
+            "requested_by_id = user_low_id OR requested_by_id = user_high_id",
+            name="ck_friendship_requester",
+        ),
+        db.CheckConstraint(
+            "status IN ('pending','accepted')", name="ck_friendship_status"
+        ),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    user_low_id = db.Column(
+        db.Integer, db.ForeignKey("user.id"), nullable=False, index=True
+    )
+    user_high_id = db.Column(
+        db.Integer, db.ForeignKey("user.id"), nullable=False, index=True
+    )
+    requested_by_id = db.Column(
+        db.Integer, db.ForeignKey("user.id"), nullable=False
+    )
+    status = db.Column(
+        db.String(8),
+        nullable=False,
+        default="pending",
+        server_default="pending",
+    )
+    created_at = db.Column(
+        db.DateTime(timezone=True), nullable=False, default=_utcnow
+    )
 
 
 class ImportBatch(db.Model):
@@ -177,6 +242,7 @@ class SourceRecord(db.Model):
 
 class JobApplication(db.Model):
     __table_args__ = (
+        db.Index("ix_job_social_activity", "user_id", "applied_on", "status"),
         db.CheckConstraint("version >= 1", name="ck_job_version"),
         db.CheckConstraint(
             "status IN ('shortlisted','applied','interviewing','offer',"

@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 {% from "macros/jobs.html" import stat_card, status_badge %}
+{% from "community/macros.html" import progress_cards %}
 
-{% block title %}Dashboard - Job Scout Tracker{% endblock %}
+{% block title %}Dashboard - Job Scout Tracker<section class="card mt-4"><div class="card-header">By actual application date</div><div class="card-body">
+  <p class="small text-muted">Unknown dates: {{ unknown_dates }}. Record creation time is not an application date.</p>
+  {% for date, count in by_date %}<span class="d-inline-block border rounded p-2 me-2 mb-2">{{ date }} <strong>{{ count }}</strong></span>{% else %}<p class="text-muted mb-0">No known application dates yet.</p>{% endfor %}
+  {% if by_date %}<p class="form-text mb-0">Showing up to the 30 latest application dates.</p>{% endif %}
+</div></section>
+{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
@@ -20,6 +26,12 @@
   {{ stat_card(counts['interviewing'], "Interviewing", "chat-dots") }}
   {{ stat_card(counts['offer'] + counts['accepted'], "Offers", "trophy") }}
 </div>
+
+<section class="progress-hub mb-4">
+  <div class="community-header mb-3"><div><p class="community-eyebrow">Keep your momentum</p><h2 class="h5 mb-0">Your progress</h2></div><a class="btn btn-outline-primary btn-sm" href="{{ url_for('community.index') }}"><i class="bi bi-people me-1" aria-hidden="true"></i>Community &amp; friends</a></div>
+  {{ progress_cards(progress, current_user.daily_goal) }}
+  <p class="small text-muted mb-0">Based on actual application dates (UTC). Unknown dates: {{ progress.unknown_dates }}. These count toward XP, but not daily stats. <a href="{{ url_for('community.profile', handle=current_user.handle) if current_user.handle else url_for('community.settings') }}">View milestones &amp; profile</a></p>
+</section>
 
 <div class="row g-4">
   <div class="col-lg-5">
@@ -74,7 +86,7 @@
 </div>
 <div class="row g-4 mt-1">
   {% for label, items, due in [('Overdue follow-ups', overdue, 'overdue'), ('Today and upcoming', upcoming, 'upcoming')] %}
-  <div class="col-md-6"><section class="card h-100"><div class="card-header d-flex justify-content-between"><span>{{ label }}</span><a href="{{ url_for('jobs.follow_ups', due=due) }}">View queue</a></div>
+  <div class="col-md-6"><section class="card h-100"><div class="card-header d-flex justify-content-between flex-wrap gap-2"><span>{{ label }}</span><a href="{{ url_for('jobs.follow_ups', due=due) }}">View queue</a></div>
     <div class="list-group list-group-flush">{% for job in items %}<a class="list-group-item list-group-item-action" href="{{ url_for('jobs.job_detail', job_id=job.id) }}">{{ job.job_title }} &middot; {{ job.company }} <span class="text-muted small">{{ job.follow_up_on }}</span></a>{% else %}<p class="text-muted p-3 mb-0">No follow-ups in this queue.</p>{% endfor %}</div>
   </section></div>
   {% endfor %}

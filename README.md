@@ -143,6 +143,41 @@ on login/registration pages only when both credentials are configured.
 Follow [the Google login setup guide](docs/google-login.md) for Cloud Console
 steps, local testing, HTTPS deployment, and connecting an existing account.
 
+## Community and progress
+
+Open **Community** in the header. Choose a username
+in **Account → Profile & privacy**, set a goal, and decide who can see your profile.
+Existing and new accounts default to private with job sharing off. Public means
+visible to signed-in community members. Private profiles show their identity for
+an exact username lookup, but only accepted friends can see their bio and stats.
+Email addresses are never part of member discovery or other members' profiles.
+
+Send and accept friend requests to compare today, the last seven days, total
+applications, best day, or current streak. Either friend can remove the connection
+to end private-profile access. A public profile remains visible to signed-in
+members until its owner switches it to private.
+
+**Share my applied jobs on my profile** is a separate opt-in. Shared lists show
+only company, role, posting link, status, and application date. Notes, resumes,
+salary, contact details, follow-ups, and connected-source credentials remain
+private. Viewers can open the posting or save a job to their own shortlist; this
+creates a new private record without copying application dates or private fields.
+It does not submit an application to the employer.
+
+Daily stats use recorded `applied_on` dates and the UTC calendar, never creation
+timestamps. Submitted statuses are applied, interviewing, offer, accepted, and
+rejected; closed records count only when they have an application date. Unknown
+dates count toward total applications and XP but not daily totals or streaks.
+Future dates, shortlisted, skipped, and deleted records are excluded. A streak
+remains active when yesterday was the latest application day. Each submitted
+record contributes 10 XP; every 10 applications adds a level. Editing or deleting
+records updates stats and milestones, and changing status never counts a job twice.
+
+Migration `a93e7d4b620f` adds profile preferences, friendships, and an activity
+index without altering existing application records. Back up an existing database
+before running `flask --app run.py db upgrade`. Compose startup also refreshes
+runtime permissions, including deletion of friendship requests/connections.
+
 ## API and reference client
 
 Import an existing tracker from the account menu's **Import applications** entry.

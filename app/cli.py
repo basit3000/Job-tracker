@@ -128,6 +128,7 @@ def grant_runtime():
                 "import_batch",
                 "source_connection",
                 "source_record",
+                "friendship",
             }:
                 privileges += ", DELETE"
             quoted = db.engine.dialect.identifier_preparer.quote(table.name)

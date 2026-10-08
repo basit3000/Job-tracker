@@ -65,6 +65,7 @@ def _register_blueprints(app):
     from app.exports import exports
     from app.routes.api import api
     from app.routes.auth import auth
+    from app.routes.community import community
     from app.routes.google_auth import google_auth
     from app.routes.imports import imports
     from app.routes.integrations import integrations
@@ -77,6 +78,7 @@ def _register_blueprints(app):
         google_auth,
         main,
         jobs,
+        community,
         api,
         integrations,
         exports,

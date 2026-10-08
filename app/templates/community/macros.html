@@ -1,0 +1,49 @@
+{% from "macros/forms.html" import csrf_field %}
+
+{% macro friendship_action(link, action, label, style="outline-primary") -%}
+<form class="d-inline" method="POST" action="{{ url_for('community.manage_friendship', friendship_id=link.id, action=action) }}"{% if action == 'remove' %} data-confirm="Remove this friend and end their access to your private profile?"{% endif %}>
+  {{ csrf_field() }}
+  <button class="btn btn-{{ style }} btn-sm" type="submit">{{ label }}</button>
+</form>
+{%- endmacro %}
+
+{% macro progress_cards(progress, goal=none) -%}
+<div class="row g-3 mb-4 community-stats">
+  {% for value, label, icon in [(progress.today, 'Applied today', 'lightning-charge'), (progress.week, 'Last 7 days', 'calendar-week'), (progress.best_day, 'Personal best / day', 'trophy'), (progress.streak, 'Day streak', 'fire')] %}
+  <div class="col-6 col-lg-3"><div class="stat-card h-100"><div class="stat-value">{{ value }}</div><div class="stat-label"><i class="bi bi-{{ icon }} me-1" aria-hidden="true"></i>{{ label }}</div></div></div>
+  {% endfor %}
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-6"><section class="card h-100"><div class="card-body">
+    <div class="d-flex justify-content-between gap-2"><h2 class="h5">Level {{ progress.level }}</h2><span class="fw-semibold text-primary">{{ progress.xp }} XP</span></div>
+    <progress class="community-progress" value="{{ progress.level_progress }}" max="100" aria-label="Progress to next level">{{ progress.level_progress }}%</progress>
+    <p class="small text-muted mt-2 mb-0">{{ progress.to_next_level }} more applications to level {{ progress.level + 1 }}. Each submitted application earns 10 XP.</p>
+  </div></section></div>
+  <div class="col-md-6"><section class="card h-100"><div class="card-body">
+    {% if goal %}
+    <div class="d-flex justify-content-between gap-2"><h2 class="h5">Your daily goal</h2><span class="fw-semibold">{{ progress.today }} / {{ goal }}</span></div>
+    <progress class="community-progress" value="{{ [progress.today, goal]|min }}" max="{{ goal }}" aria-label="Daily application goal">{{ progress.today }} / {{ goal }}</progress>
+    <p class="small text-muted mt-2 mb-0">{% if progress.today >= goal %}Goal reached. Give yourself a moment to celebrate.{% else %}{{ goal - progress.today }} more today. Build a pace that works for you.{% endif %} <a href="{{ url_for('community.settings') }}">Adjust goal</a></p>
+    {% else %}
+    <h2 class="h5">{{ progress.total }} application{{ '' if progress.total == 1 else 's' }} submitted</h2>
+    <p class="small text-muted mb-0">Longest streak: {{ progress.best_streak }} day{{ '' if progress.best_streak == 1 else 's' }}.{% if progress.best_date %} Best day: {{ progress.best_date }}.{% endif %}</p>
+    {% endif %}
+  </div></section></div>
+</div>
+{%- endmacro %}
+
+{% macro activity_chart(progress) -%}
+<section class="card mb-4"><div class="card-body">
+  <div class="d-flex justify-content-between gap-2 flex-wrap"><h2 class="h5">Application activity · last 14 days</h2><span class="small text-muted">{{ progress.total }} submitted &middot; best streak {{ progress.best_streak }} days</span></div>
+  <div class="activity-chart" role="img" aria-label="Application activity over the last 14 days">
+    {% for item in progress.activity %}<div class="activity-day" title="{{ item.day }}: {{ item.count }} applications"><span class="activity-count">{{ item.count }}</span><div class="activity-track"><div class="activity-fill" style="height: {{ item.count / progress.activity_max * 100 }}%"></div></div><span class="activity-label">{{ item.day.strftime('%d') }}</span><span class="visually-hidden">{{ item.day }}: {{ item.count }} applications</span></div>{% endfor %}
+  </div>
+  <p class="small text-muted mb-0 mt-3">Daily stats use actual application dates and the UTC calendar. Unknown dates ({{ progress.unknown_dates }}) count toward XP, but never daily totals or streaks. Future dates, shortlisted, skipped, and deleted records are excluded.</p>
+</div></section>
+{%- endmacro %}
+
+{% macro achievement_badges(progress) -%}
+<section class="card mb-4"><div class="card-body"><h2 class="h5 mb-3">Milestones</h2>
+  <div class="achievement-grid">{% for badge in progress.badges %}<div class="achievement {{ 'earned' if badge.earned else 'locked' }}"><i class="bi bi-{{ 'patch-check-fill' if badge.earned else 'lock' }}" aria-hidden="true"></i><div><strong>{{ badge.name }}</strong><p class="small mb-0">{{ badge.description }}</p><span class="small">{{ 'Earned' if badge.earned else 'Keep going' }}</span></div></div>{% endfor %}</div>
+</div></section>
+{%- endmacro %}

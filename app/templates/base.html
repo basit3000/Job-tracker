@@ -34,6 +34,7 @@
               <a class="nav-link {{ 'active' if request.endpoint == 'jobs.job_list' }}" href="{{ url_for('jobs.job_list') }}"><i aria-hidden="true" class="bi bi-list-check me-1"></i>My Jobs</a>
             </li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('jobs.status_board') }}">Board</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('community.index') }}">Community</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('jobs.follow_ups') }}">Follow-ups</a></li>
             <li class="nav-item">
               <a class="nav-link {{ 'active' if request.endpoint == 'jobs.add_job' }}" href="{{ url_for('jobs.add_job') }}"><i aria-hidden="true" class="bi bi-plus-circle me-1"></i>Add Job</a>
@@ -44,6 +45,7 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="{{ url_for('google_auth.account') }}">Account settings</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('community.settings') }}">Profile &amp; privacy</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('integrations.index') }}">Job Scout connection</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('exports.index') }}">Export applications</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('imports.index') }}">Import applications</a></li>

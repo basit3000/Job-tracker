@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import csrf_field %}
+{% from "macros/jobs.html" import status_badge %}
+{% from "community/macros.html" import friendship_action, progress_cards, activity_chart, achievement_badges %}
+{% block title %}{{ person.profile_name }} - Job Tracker{% endblock %}
+{% block content %}
+<div class="profile-hero mb-4"><div class="d-flex gap-3 align-items-center"><span class="member-avatar profile-avatar" aria-hidden="true">{{ person.profile_name[:1]|upper }}</span><div><p class="community-eyebrow">{{ person.profile_visibility|title }} profile</p><h1 class="h3 mb-1">{{ person.profile_name }}</h1><p class="text-muted mb-0">@{{ person.handle }}</p></div></div><div class="d-flex gap-2 flex-wrap align-items-center">
+  {% if person.id == current_user.id %}<a class="btn btn-outline-primary" href="{{ url_for('community.settings') }}">Edit profile</a>
+  {% elif link and link.status == 'accepted' %}<span class="badge bg-success">Friends</span>{{ friendship_action(link, 'remove', 'Remove friend', 'outline-secondary') }}
+  {% elif link and link.requested_by_id == current_user.id %}<span class="small text-muted">Request sent</span>{{ friendship_action(link, 'cancel', 'Cancel request', 'outline-secondary') }}
+  {% elif link %}{{ friendship_action(link, 'accept', 'Accept request', 'primary') }}{{ friendship_action(link, 'decline', 'Decline', 'outline-secondary') }}
+  {% elif current_user.handle %}<form method="POST" action="{{ url_for('community.add_friend', handle=person.handle) }}">{{ csrf_field() }}<button class="btn btn-primary" type="submit"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>Add friend</button></form>
+  {% else %}<a class="btn btn-primary" href="{{ url_for('community.settings') }}">Set up profile to add friends</a>{% endif %}
+  <a class="btn btn-outline-secondary" href="{{ url_for('community.index') }}">Community</a>
+</div></div>
+{% if allowed %}
+  {% if person.bio %}<p class="profile-bio mb-4">{{ person.bio }}</p>{% endif %}
+  {% if person.id == current_user.id %}<p class="small text-muted">Your {{ person.profile_visibility }} profile is visible {% if person.profile_visibility == 'public' %}to signed-in members{% else %}to accepted friends{% endif %}. Job sharing is {{ 'on' if person.share_jobs else 'off' }}.</p>{% endif %}
+  {{ progress_cards(progress, person.daily_goal if person.id == current_user.id else none) }}
+  {{ activity_chart(progress) }}
+  {{ achievement_badges(progress) }}
+  <section class="card"><div class="card-body"><h2 class="h5">Shared applications</h2>
+    {% if pagination is not none %}<p class="small text-muted">{{ pagination.total }} submitted applications. Follow a posting to apply, or save it to your own shortlist. Posting availability can change.</p>
+      <div class="shared-job-list">{% for job in pagination.items %}<article class="shared-job"><div><h3 class="h6 mb-1">{{ job.job_title }}</h3><p class="mb-1">{{ job.company }}</p><div class="d-flex gap-2 align-items-center flex-wrap">{{ status_badge(job.status) }}<span class="small text-muted">Applied {{ job.applied_on if job.applied_on else 'on an unknown date' }}</span></div></div><div class="shared-job-actions">{% if job.safe_job_url %}<a class="btn btn-outline-primary btn-sm" href="{{ job.safe_job_url }}" target="_blank" rel="noopener noreferrer">View posting <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>{% else %}<span class="small text-muted">No posting link</span>{% endif %}{% if person.id != current_user.id %}<form method="POST" action="{{ url_for('community.save_shared_job', handle=person.handle, public_id=job.public_id) }}">{{ csrf_field() }}<button class="btn btn-primary btn-sm" type="submit">Save to my shortlist</button></form>{% endif %}</div></article>{% else %}<p class="text-muted mb-0">No submitted applications to share yet.</p>{% endfor %}</div>
+      {% if pagination.pages > 1 %}<nav aria-label="Shared application pages" class="d-flex justify-content-between align-items-center mt-3">{% if pagination.has_prev %}<a href="{{ url_for('community.profile', handle=person.handle, page=pagination.prev_num) }}">Previous</a>{% else %}<span></span>{% endif %}<span class="small text-muted">Page {{ pagination.page }} of {{ pagination.pages }}</span>{% if pagination.has_next %}<a href="{{ url_for('community.profile', handle=person.handle, page=pagination.next_num) }}">Next</a>{% else %}<span></span>{% endif %}</nav>{% endif %}
+    {% else %}<p class="text-muted mb-0">{% if person.id == current_user.id %}Job sharing is off. You can enable it in <a href="{{ url_for('community.settings') }}">profile settings</a>.{% else %}This member has kept their job list private.{% endif %}</p>{% endif %}
+  </div></section>
+{% else %}<section class="card"><div class="card-body p-4"><i class="bi bi-lock fs-2 text-primary" aria-hidden="true"></i><h2 class="h5 mt-3">A private profile</h2><p class="text-muted mb-0">Stats, milestones, bio, and shared applications are visible after a friend request is accepted.</p></div></section>{% endif %}
+{% endblock %}

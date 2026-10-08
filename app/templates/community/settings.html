@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import field %}
+{% block title %}My profile - Job Tracker{% endblock %}
+{% block content %}
+<div class="community-header"><div><p class="community-eyebrow">Make progress together</p><h1 class="h3">Profile &amp; privacy</h1><p class="text-muted mb-0">Choose how you show up, and what you share.</p></div><a class="btn btn-outline-primary" href="{{ url_for('community.index') }}">Community &amp; friends</a></div>
+<div class="row g-4">
+  <div class="col-lg-7"><section class="card"><div class="card-body p-4"><form method="POST">
+    {{ form.hidden_tag() }}
+    {% call field(form.handle, "e.g. basit_dev", autocomplete="nickname") %}<p class="form-text">3–24 letters, numbers, or underscores. Friends can find a private profile by its exact username. Your email is never shown to other members.</p>{% endcall %}
+    {{ field(form.display_name, "What should we call you?") }}
+    {{ field(form.bio, "A little about your search", rows=3) }}
+    {% call field(form.profile_visibility, control_class="form-select") %}<p class="form-text">Private profiles share stats and your bio with accepted friends. Public profiles are discoverable and viewable by signed-in members.</p>{% endcall %}
+    <div class="form-check mb-3">{{ form.share_jobs(class="form-check-input") }}{{ form.share_jobs.label(class="form-check-label") }}<p class="form-text">When enabled, profile viewers can see company, role, job link, status, and application date, and save a job to their own shortlist. Turn it off to hide your job list immediately.</p></div>
+    {{ field(form.daily_goal, min=1, max=100) }}
+    {{ form.submit(class="btn btn-primary") }}
+  </form></div></section></div>
+  <div class="col-lg-5"><aside class="card privacy-card"><div class="card-body p-4"><i class="bi bi-shield-lock fs-2 text-primary" aria-hidden="true"></i><h2 class="h5 mt-3">Private by default</h2><p>Every existing and new account starts private, with job sharing off. Set a username to participate.</p><p class="mb-0">Notes, resumes, contacts, salary, follow-ups, account email, and connected-source details stay private regardless of profile visibility. Friends cannot edit your applications.</p></div></aside></div>
+</div>
+{% endblock %}

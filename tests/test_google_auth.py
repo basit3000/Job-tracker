@@ -470,7 +470,16 @@ def test_google_migration_preserves_passwords_and_refuses_identity_loss(
         with pytest.raises((RuntimeError, SystemExit)):
             downgrade(directory=MIGRATIONS, revision="c61e92ad7401")
         db.session.rollback()
-        assert db.session.get(User, 41).google_subject == "fictional-identity"
+        # A multi-revision downgrade may already have removed later columns
+        # before the Google migration refuses to discard this identity.
+        with db.engine.connect() as connection:
+            assert (
+                connection.execute(
+                    text('SELECT google_subject FROM "user" WHERE id=41')
+                ).scalar_one()
+                == "fictional-identity"
+            )
+        upgrade(directory=MIGRATIONS)
         empty = User(email="invalid-empty-account@example.com")
         db.session.add(empty)
         with pytest.raises(IntegrityError):

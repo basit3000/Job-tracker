@@ -2,6 +2,7 @@ from flask import current_app
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from wtforms import (
+    BooleanField,
     DateField,
     HiddenField,
     IntegerField,
@@ -20,6 +21,7 @@ from wtforms.validators import (
     Length,
     NumberRange,
     Optional,
+    Regexp,
     ValidationError,
 )
 from wtforms.widgets import HiddenInput
@@ -37,6 +39,45 @@ def strip_text(value):
 
 def normalize_email(value):
     return value.strip().lower() if value else value
+
+
+class ProfileForm(FlaskForm):
+    handle = StringField(
+        "Username",
+        filters=[normalize_email],
+        validators=[
+            DataRequired(),
+            Length(min=3, max=24),
+            Regexp(
+                r"^[a-z0-9_]+$",
+                message="Use lowercase letters, numbers, and underscores.",
+            ),
+        ],
+    )
+    display_name = StringField(
+        "Display name",
+        filters=[strip_text],
+        validators=[Optional(), Length(max=60)],
+    )
+    bio = TextAreaField(
+        "About you",
+        filters=[strip_text],
+        validators=[Optional(), Length(max=280)],
+    )
+    profile_visibility = SelectField(
+        "Profile visibility",
+        choices=[
+            ("private", "Private - accepted friends only"),
+            ("public", "Public - signed-in community members"),
+        ],
+        validators=[DataRequired()],
+    )
+    share_jobs = BooleanField("Share my applied jobs on my profile")
+    daily_goal = IntegerField(
+        "Daily application goal",
+        validators=[DataRequired(), NumberRange(min=1, max=100)],
+    )
+    submit = SubmitField("Save profile")
 
 
 def http_url(_form, field):

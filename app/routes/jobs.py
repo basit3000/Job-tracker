@@ -15,6 +15,7 @@ from flask_login import current_user, login_required
 
 from app.contracts import ServiceError, form_version
 from app.forms import JobApplicationForm
+from app.gamification import application_stats
 from app.models import JOB_STATUSES, JobApplication
 from app.services import (
     DEFAULT_SORT,
@@ -72,6 +73,7 @@ def dashboard():
     return render_template(
         "jobs/dashboard.html",
         **dashboard_summary(current_user.id),
+        progress=application_stats([current_user.id])[current_user.id],
     )
 
 
