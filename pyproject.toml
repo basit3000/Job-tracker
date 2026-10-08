@@ -10,3 +10,9 @@ max-complexity = 10
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.vercel]
+entrypoint = "wsgi:app"
+
+[tool.vercel.scripts]
+build = "python ops/build_vercel.py"

@@ -61,7 +61,9 @@ PUBLIC_PATHS = (
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="Git is unavailable")
-@pytest.mark.parametrize("ignore_file", [".gitignore", ".dockerignore"])
+@pytest.mark.parametrize(
+    "ignore_file", [".gitignore", ".dockerignore", ".vercelignore"]
+)
 def test_private_file_globs_cover_root_and_nested_paths(tmp_path, ignore_file):
     # These exclusion files use the shared Git/Docker glob syntax. This
     # checks that subset with Git; it does not build a Docker image.
