@@ -14,6 +14,42 @@
   --info: #3b82f6;
 }
 
+/* Application activity and optional reminders. */
+.streak-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem; border: 1px solid #fed7aa; border-radius: .85rem; background: #fff7ed; }
+.streak-symbol { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: #c2410c; background: #ffedd5; font-size: 1.5rem; }
+.streak-best { display: inline-block; font-size: .8rem; font-weight: 500; color: #9a3412; margin-left: .5rem; }
+.chart-period { padding: .35rem .7rem; background: var(--primary-soft); border-radius: 2rem; font-size: .75rem; color: var(--primary); }
+.chart-highlights { display: flex; flex-wrap: wrap; gap: .6rem 1.5rem; margin: 1rem 0; font-size: .8rem; color: var(--text-muted); }
+.chart-highlights strong { color: var(--text); font-size: 1.1rem; }
+.daily-chart-scroll { overflow-x: auto; padding: .25rem 0; }
+.daily-chart { display: grid; grid-template-columns: repeat(28, minmax(16px, 1fr)); min-width: 560px; gap: 5px; }
+.daily-chart-dates { min-width: 560px; }
+.daily-chart-column { display: flex; flex-direction: column; align-items: center; }
+.daily-chart-value, .daily-chart-label { color: var(--text-muted); font-size: .65rem; padding: .25rem 0; }
+.daily-chart-track { width: 100%; height: 150px; display: flex; align-items: flex-end; border-bottom: 1px solid var(--border); background: repeating-linear-gradient(to top, transparent, transparent 49px, #f1f5f9 49px, #f1f5f9 50px); }
+.daily-chart-bar { width: 100%; border-radius: 4px 4px 0 0; background: #a5b4fc; }
+.daily-chart-bar.is-today { background: var(--primary); }
+.chart-data summary { color: var(--primary); font-size: .85rem; cursor: pointer; padding: .5rem 0; }
+.chart-data-scroll { max-height: 280px; overflow: auto; }
+.consistency-calendar { display: grid; grid-template-columns: 18px repeat(12, minmax(0, 1fr)); gap: 5px; max-width: 600px; margin: 1.25rem 0; }
+.calendar-week, .calendar-labels { display: grid; grid-template-rows: repeat(7, 1fr); gap: 5px; }
+.calendar-labels { font-size: .6rem; color: var(--text-muted); text-align: center; }
+.calendar-cell { display: block; aspect-ratio: 1; border: 1px solid #dbe2ee; border-radius: 3px; }
+.intensity-0 { background: #f1f5f9; }
+.intensity-1 { background: #c7d2fe; border-color: #a5b4fc; }
+.intensity-2 { background: #818cf8; border-color: #6366f1; }
+.intensity-3 { background: #4f46e5; border-color: #4338ca; }
+.calendar-cell.is-future { opacity: .3; border-style: dashed; }
+.calendar-legend { display: flex; flex-wrap: wrap; gap: .65rem; margin-bottom: 1rem; }
+.calendar-legend > span { display: inline-flex; gap: .25rem; align-items: center; }
+.calendar-legend .calendar-cell { width: 13px; }
+.reminder-history-item { display: grid; gap: .2rem; padding: .75rem 0; border-bottom: 1px solid var(--border); }
+@media (max-width: 575px) {
+  .consistency-calendar { gap: 3px; }
+  .calendar-week, .calendar-labels { gap: 3px; }
+  .streak-best { display: block; margin: .3rem 0 0; }
+}
+
 body {
   margin: 0;
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;

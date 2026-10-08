@@ -41,6 +41,18 @@ def normalize_email(value):
     return value.strip().lower() if value else value
 
 
+class NotificationForm(FlaskForm):
+    email_enabled = BooleanField("Email me when I haven't applied today")
+    timezone_name = SelectField("Your time zone", validators=[DataRequired()])
+    reminder_hour = SelectField(
+        "Remind me at",
+        coerce=int,
+        choices=[(hour, f"{hour:02d}:00") for hour in range(24)],
+        validators=[NumberRange(min=0, max=23)],
+    )
+    submit = SubmitField("Save notifications")
+
+
 class ProfileForm(FlaskForm):
     handle = StringField(
         "Username",

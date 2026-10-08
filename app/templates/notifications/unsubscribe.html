@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import csrf_field %}
+{% block title %}Email reminders - Job Tracker{% endblock %}
+{% block content %}
+<section class="card"><div class="card-body">
+{% if done %}<h1 class="h3">Reminders turned off</h1><p>You won't receive daily application reminders. You can enable them again in Notifications.</p>
+{% else %}<h1 class="h3">Turn off email reminders?</h1><p>This stops daily application reminder emails for the account that received this link.</p><form method="POST">{{ csrf_field() }}<button class="btn btn-primary" type="submit">Turn off reminders</button></form>{% endif %}
+</div></section>
+{% endblock %}

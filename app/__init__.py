@@ -71,6 +71,7 @@ def _register_blueprints(app):
     from app.routes.integrations import integrations
     from app.routes.jobs import jobs
     from app.routes.main import main
+    from app.routes.notifications import notifications
     from app.routes.sources import sources
 
     for blueprint in (
@@ -78,6 +79,7 @@ def _register_blueprints(app):
         google_auth,
         main,
         jobs,
+        notifications,
         community,
         api,
         integrations,

@@ -85,6 +85,7 @@ def register_cli(app):
     app.cli.add_command(grant_runtime)
     app.cli.add_command(cleanup_imports)
     app.cli.add_command(sync_sources)
+    app.cli.add_command(send_reminders)
 
 
 @click.command("cleanup-imports")
@@ -163,4 +164,32 @@ def sync_sources(watch):
         result = run_due_syncs()
         click.echo(
             f"Synced {result['synced']} sources; {result['failed']} failed."
+        )
+
+
+@click.command("send-reminders")
+@click.option(
+    "--watch", is_flag=True, help="Check for due reminders every minute."
+)
+@with_appcontext
+def send_reminders(watch):
+    """Send opted-in daily nudges, without repeating a daily attempt."""
+    from app.notifications import (
+        mail_ready,
+        run_due_reminders,
+        watch_reminders,
+    )
+
+    if watch:
+        watch_reminders(current_app._get_current_object())
+    elif not mail_ready():
+        raise click.ClickException(
+            "Email reminders are disabled or SMTP/APP_BASE_URL "
+            "configuration is incomplete."
+        )
+    else:
+        result = run_due_reminders()
+        click.echo(
+            f"Sent {result['sent']}; failed {result['failed']}; "
+            f"skipped {result['skipped']}."
         )

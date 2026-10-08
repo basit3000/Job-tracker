@@ -112,6 +112,40 @@ class User(UserMixin, db.Model):
         return f"<User {self.email}>"
 
 
+class NotificationPreference(db.Model):
+    __table_args__ = (
+        db.CheckConstraint(
+            "reminder_hour BETWEEN 0 AND 23", name="ck_reminder_hour"
+        ),
+    )
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
+    email_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    timezone_name = db.Column(db.String(64), nullable=False, default="UTC")
+    reminder_hour = db.Column(db.Integer, nullable=False, default=20)
+    unsubscribe_key = db.Column(
+        db.String(36), nullable=False, default=public_id
+    )
+
+
+class ReminderDelivery(db.Model):
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "local_date", name="uq_reminder_day"),
+        db.CheckConstraint(
+            "status IN ('claimed','sent','failed','skipped')",
+            name="ck_reminder_status",
+        ),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    local_date = db.Column(db.Date, nullable=False)
+    timezone_name = db.Column(db.String(64), nullable=False)
+    status = db.Column(db.String(8), nullable=False, default="claimed")
+    created_at = db.Column(
+        db.DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+    sent_at = db.Column(db.DateTime(timezone=True))
+
+
 class Friendship(db.Model):
     """One canonical pair, with explicit consent before sharing access."""
 

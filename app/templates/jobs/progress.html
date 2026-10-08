@@ -1,0 +1,33 @@
+{% from "community/macros.html" import achievement_badges %}
+<section class="streak-summary mb-4" aria-label="Your streak">
+  <div class="streak-symbol"><i class="bi bi-fire" aria-hidden="true"></i></div>
+  <div class="flex-grow-1"><h2 class="h5 mb-1">{{ progress.streak }}-day streak <span class="streak-best">Best: {{ progress.best_streak }} days</span></h2>
+    <p class="small mb-0">{% if progress.today %}You've shown up today. Every step counts.{% elif progress.streak %}Your streak is still alive. Record an application today to keep it going.{% else %}Your next application starts a new streak. A fresh start counts too.{% endif %}</p>
+  </div>
+  <a class="btn btn-outline-primary btn-sm" href="{{ url_for('notifications.settings') }}"><i class="bi bi-bell me-1" aria-hidden="true"></i>Set a reminder</a>
+</section>
+
+<section class="card mb-4"><div class="card-body">
+  <div class="community-header"><div><p class="community-eyebrow">Your rhythm</p><h2 class="h5">Applications over time</h2></div><span class="chart-period">Last 28 days</span></div>
+  <div class="chart-highlights"><span><strong>{{ progress.chart_total }}</strong> applications</span><span><strong>{{ progress.active_days }}</strong> active days</span><span><strong>{{ '+' if progress.week_change > 0 else '' }}{{ progress.week_change }}</strong> this week vs. last</span></div>
+  <div class="daily-chart-scroll" tabindex="0" role="region" aria-label="Daily applications chart; scroll horizontally on small screens">
+    <div class="daily-chart" role="img" aria-label="{{ progress.chart_total }} applications across {{ progress.active_days }} active days in the last 28 days. Daily values are available in the table below.">
+      {% for item in progress.chart_days %}<div class="daily-chart-column" title="{{ item.day }}: {{ item.count }} applications"><span class="daily-chart-value">{{ item.count }}</span><div class="daily-chart-track"><div class="daily-chart-bar{{ ' is-today' if loop.last }}" style="height: {{ item.count / progress.chart_max * 100 }}%"></div></div><span class="daily-chart-label">{{ item.day.strftime('%d') }}</span></div>{% endfor %}
+    </div>
+    <div class="daily-chart-dates d-flex justify-content-between small text-muted mt-2"><span>{{ progress.chart_days[0].day.strftime('%d %b') }}</span><span>Today &middot; {{ progress.chart_days[-1].day.strftime('%d %b') }}</span></div>
+  </div>
+  <p class="small text-muted d-md-none mt-2 mb-0">Swipe the chart to see all 28 days, or open the daily totals below.</p>
+  {% if not progress.chart_total %}<p class="small text-muted mt-3 mb-0">Your chart starts with your first dated application. Shortlisted jobs don't count as submitted applications.</p>{% endif %}
+  <details class="chart-data mt-3"><summary>View daily totals</summary><div class="chart-data-scroll"><table class="table table-sm mt-2"><caption class="visually-hidden">Applications submitted on each date, UTC</caption><thead><tr><th scope="col">Date</th><th scope="col">Applications</th></tr></thead><tbody>{% for item in progress.chart_days|reverse %}<tr><td>{{ item.day }}</td><td>{{ item.count }}</td></tr>{% endfor %}</tbody></table></div></details>
+</div></section>
+
+<section class="card mb-4"><div class="card-body">
+  <div class="community-header"><div><p class="community-eyebrow">Small steps add up</p><h2 class="h5">Consistency calendar</h2></div><span class="chart-period">Last 12 weeks</span></div>
+  <div class="consistency-calendar" aria-label="Application activity calendar, Monday to Sunday, oldest week first">
+    <div class="calendar-labels" aria-hidden="true">{% for day in ['M', 'T', 'W', 'T', 'F', 'S', 'S'] %}<span>{{ day }}</span>{% endfor %}</div>
+    {% for week in progress.calendar_weeks %}<div class="calendar-week">{% for item in week %}<span class="calendar-cell intensity-{{ 0 if not item.count else (1 if item.count < 3 else (2 if item.count < 5 else 3)) }}{{ ' is-future' if item.future }}" title="{{ item.day }}: {{ 'Upcoming' if item.future else item.count|string + ' applications' }}"><span class="visually-hidden">{{ item.day }}: {{ 'Upcoming' if item.future else item.count|string + ' applications' }}</span></span>{% endfor %}</div>{% endfor %}
+  </div>
+  <div class="calendar-legend small text-muted"><span>Applications:</span>{% for level, label in [(0, '0'), (1, '1–2'), (2, '3–4'), (3, '5+')] %}<span><i class="calendar-cell intensity-{{ level }}" aria-hidden="true"></i>{{ label }}</span>{% endfor %}</div>
+  <p class="small text-muted mb-0">One application keeps a streak going. The calendar and charts use UTC application dates; unknown dates, future dates, deleted jobs, and unsubmitted jobs are excluded.</p>
+</div></section>
+{{ achievement_badges(progress) }}

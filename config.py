@@ -28,6 +28,14 @@ class Config:
     ALLOW_INSECURE_LOCAL_API = env_bool("ALLOW_INSECURE_LOCAL_API")
     API_MAX_CONTENT_LENGTH = 128 * 1024
     API_PAGE_SIZE = 50
+    EMAIL_REMINDERS_ENABLED = env_bool("EMAIL_REMINDERS_ENABLED")
+    SMTP_HOST = os.environ.get("SMTP_HOST", "")
+    SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+    SMTP_SECURITY = os.environ.get("SMTP_SECURITY", "starttls")
+    SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "")
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+    SMTP_FROM = os.environ.get("SMTP_FROM", "")
+    APP_BASE_URL = os.environ.get("APP_BASE_URL", "http://localhost:5000")
 
     # Normalize the legacy "postgres://" scheme used by some providers.
     SQLALCHEMY_DATABASE_URI = normalize_database_url(

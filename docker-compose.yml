@@ -16,6 +16,14 @@ services:
       SYNC_ENCRYPTION_KEY: ${SYNC_ENCRYPTION_KEY:-}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:5000/auth/google/callback}
       ALLOW_INSECURE_LOCAL_API: ${ALLOW_INSECURE_LOCAL_API:-false}
+      EMAIL_REMINDERS_ENABLED: ${EMAIL_REMINDERS_ENABLED:-false}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURITY: ${SMTP_SECURITY:-starttls}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5000}
       FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
       RATELIMIT_STORAGE_URI: redis://redis:6379/0
     depends_on:
@@ -27,6 +35,17 @@ services:
   source_sync:
     build: .
     command: ["flask", "--app", "run.py", "sync-sources", "--watch"]
+    environment:
+      <<: *tracker_environment
+      MIGRATION_DATABASE_URL: ""
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_started
+
+  reminders:
+    build: .
+    command: ["flask", "--app", "run.py", "send-reminders", "--watch"]
     environment:
       <<: *tracker_environment
       MIGRATION_DATABASE_URL: ""
