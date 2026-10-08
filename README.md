@@ -198,7 +198,8 @@ runtime permissions, including deletion of friendship requests/connections.
 
 ## API and reference client
 
-Import an existing tracker from **Data tools → Import applications**.
+Import an existing tracker from **Data tools → Import & sync**. Choose a
+one-time import or keep Google Sheets or Notion connected for later syncing.
 See [the import guide](docs/importing.md) for supported formats, smart mapping,
 private Google Sheets authorization and preview cleanup. Apply migration
 `f70a93bd2158` when updating an existing database.

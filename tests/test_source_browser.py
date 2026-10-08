@@ -33,7 +33,7 @@ DATA = (
 def test_select_range_map_unique_id_and_repeat_sync(
     app, users, monkeypatch, viewport
 ):
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import expect, sync_playwright
 
     data = {"body": DATA}
 
@@ -61,6 +61,11 @@ def test_select_range_map_unique_id_and_repeat_sync(
             page.get_by_label("Password", exact=True).fill("correct-password")
             page.get_by_role("button", name="Log in", exact=True).click()
             page.goto(url + "/sources")
+            page.get_by_role("link", name="Connect a source").click()
+            expect(page.get_by_label("Import from", exact=True)).to_have_value(
+                "google"
+            )
+            expect(page.get_by_label("Import behavior")).to_have_value("sync")
             page.get_by_label("Connection name").fill("Fictional sheet sync")
             page.get_by_label("Google Sheets link").fill(
                 "https://docs.google.com/spreadsheets/d/fictionalSheet12345/edit#gid=42"

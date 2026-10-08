@@ -103,9 +103,23 @@ def index():
 @login_required
 @limiter.limit("10 per minute; 60 per hour")
 def create():
+    try:
+        return create_source_preview(request.form.get("provider", ""))
+    except ServiceError as error:
+        flash(str(error), "danger")
+    except PROVIDER_ERRORS:
+        clear_google_flow()
+        flash(
+            "Google is temporarily unavailable. Try connecting again.",
+            "danger",
+        )
+    return redirect(url_for("sources.index"))
+
+
+def create_source_preview(provider):
+    """Start setup from the import hub or a legacy source form."""
     connection = None
     try:
-        provider = request.form.get("provider", "")
         if (
             provider == "google_private"
             and not current_app.config["GOOGLE_LOGIN_ENABLED"]
@@ -130,14 +144,7 @@ def create():
             record_sync_error(
                 current_user.id, connection.id, connection.version, str(error)
             )
-        flash(str(error), "danger")
-    except PROVIDER_ERRORS:
-        clear_google_flow()
-        flash(
-            "Google is temporarily unavailable. Try connecting again.",
-            "danger",
-        )
-    return redirect(url_for("sources.index"))
+        raise
 
 
 @sources.post("/sources/<connection_id>/read")

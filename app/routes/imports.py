@@ -45,13 +45,26 @@ from app.import_service import (
 from app.models import JOB_STATUSES
 from app.notion_sources import notion_id, read_notion
 from app.record_updates import lock_account
+from app.routes.sources import create_source_preview
 from app.sheet_ranges import sheet_range
 
 imports = Blueprint("imports", __name__)
 
 
-def source_tables():
+def import_choices():
+    """Normalize the shared setup form and older one-time import requests."""
     source = request.form.get("source", "file")
+    if source == "google":
+        source = request.form.get("sheet_access", "public")
+        if source not in {"public", "private"}:
+            import_error("Choose shared link or private Google access.")
+    mode = request.form.get("import_mode", "once")
+    if mode not in {"once", "sync"}:
+        import_error("Choose a one-time import or a connected source.")
+    return source, mode
+
+
+def source_tables(source):
     if source == "file":
         file = request.files.get("file")
         if not file:
@@ -85,7 +98,17 @@ def index():
     cleanup_imports()
     if request.method == "POST":
         try:
-            if request.form.get("source") == "private":
+            source, mode = import_choices()
+            if mode == "sync":
+                provider = {
+                    "public": "google_public",
+                    "private": "google_private",
+                    "notion": "notion",
+                }.get(source)
+                if not provider:
+                    import_error("Choose Google Sheets or Notion for syncing.")
+                return create_source_preview(provider)
+            if source == "private":
                 if not current_app.config["GOOGLE_LOGIN_ENABLED"]:
                     import_error(
                         "Google access is not configured. "
@@ -99,7 +122,7 @@ def index():
                         cell_range=request.form.get("cell_range", ""),
                     )
                 )
-            batch = create_batch(current_user.id, source_tables())
+            batch = create_batch(current_user.id, source_tables(source))
             return redirect(url_for("imports.mapping", batch_id=batch.id))
         except ServiceError as error:
             flash(str(error), "danger")

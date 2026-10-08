@@ -5,7 +5,8 @@
 {%- endmacro %}
 
 {% macro tool_link(label, description, endpoint, icon) -%}
-<li><a class="dropdown-item header-menu-link{{ ' active' if request.blueprint == endpoint.split('.')[0] }}" href="{{ url_for(endpoint) }}"{% if request.endpoint == endpoint %} aria-current="page"{% endif %}>
+{% set active = request.blueprint == endpoint.split('.')[0] or (endpoint == 'imports.index' and request.blueprint == 'sources') %}
+<li><a class="dropdown-item header-menu-link{{ ' active' if active }}" href="{{ url_for(endpoint) }}"{% if request.endpoint == endpoint %} aria-current="page"{% endif %}>
   <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span><strong>{{ label }}</strong><small>{{ description }}</small></span>
 </a></li>
 {%- endmacro %}

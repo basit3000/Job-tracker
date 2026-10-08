@@ -51,51 +51,6 @@
 <p>No connected sources yet.</p>
 {% endfor %}
 
-<section class="card mt-4">
-  <div class="card-body">
-    <h3 class="h5">Connect a source</h3>
-    <form method="POST" action="{{ url_for('sources.create') }}">
-      {{ csrf_field() }}
-      <div class="mb-3">
-        <label class="form-label" for="name">Connection name</label>
-        <input class="form-control" id="name" name="name" maxlength="80" required placeholder="My application tracker">
-      </div>
-      <div class="mb-3">
-        <label class="form-label" for="source">Source</label>
-        <select class="form-select" id="source" name="provider">
-          <option value="google_public">Google Sheets shared link</option>
-          {% if config.GOOGLE_LOGIN_ENABLED %}<option value="google_private">Google Sheets private access</option>{% endif %}
-          <option value="notion">Notion database or data source</option>
-        </select>
-      </div>
-      <div class="mb-3" data-import-source="google_public google_private">
-        <label class="form-label" for="sheet_url">Google Sheets link</label>
-        <input class="form-control" type="url" id="sheet_url" name="sheet_url" maxlength="2048" placeholder="https://docs.google.com/spreadsheets/d/.../edit#gid=0">
-        <label class="form-label mt-2" for="cell_range">Cell range (optional)</label>
-        <input class="form-control" id="cell_range" name="cell_range" maxlength="40" placeholder="B4:N200">
-        <p class="form-text">Choose the tab in the share link and include its heading row in the range. Private access asks Google for read-only Sheets access and saves an encrypted credential for later syncs.</p>
-      </div>
-      <div class="mb-3" data-import-source="notion">
-        <label class="form-label" for="notion_kind">Notion source type</label>
-        <select class="form-select" id="notion_kind" name="notion_kind">
-          <option value="database">Database link / ID</option>
-          <option value="data_source">Data source ID</option>
-        </select>
-        <label class="form-label mt-2" for="notion_url">Database link or data source ID</label>
-        <input class="form-control" id="notion_url" name="notion_url" maxlength="2048">
-        <label class="form-label mt-2" for="notion_token">Private Notion connection token</label>
-        <input class="form-control" type="password" id="notion_token" name="notion_token" maxlength="4096" autocomplete="off">
-        <p class="form-text">Create a Notion connection with read access and share this database with it. The token is encrypted on the server and erased when you disconnect.</p>
-      </div>
-      <div class="mb-3">
-        <label class="form-label" for="interval">Sync frequency</label>
-        <select class="form-select" id="interval" name="interval">{{ interval_options() }}</select>
-        <p class="form-text">Automatic syncing starts after you confirm the first mapping. You can pause it by selecting manual syncing.</p>
-      </div>
-      <button class="btn btn-primary">Connect and review</button>
-    </form>
-  </div>
-</section>
-<p class="form-text mt-3">Prefer a one-time transfer? <a href="{{ url_for('imports.index') }}">Import a file, pasted table, Google Sheet or Notion source.</a></p>
-<script src="{{ url_for('static', filename='js/imports.js') }}" defer></script>
+<a class="btn btn-primary mt-3" href="{{ url_for('imports.index', source='google', import_mode='sync') }}">Connect a source</a>
+<p class="form-text mt-3"><a href="{{ url_for('imports.index') }}">Back to Import &amp; sync</a> to import a file, paste a table, or set up another source.</p>
 {% endblock %}

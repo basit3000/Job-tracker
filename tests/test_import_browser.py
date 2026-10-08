@@ -35,7 +35,38 @@ def test_import_browser_flow(app, users, width):
             page.get_by_label("Password", exact=True).fill("correct-password")
             page.get_by_role("button", name="Log in", exact=True).click()
             page.goto(origin + "/imports")
+            expect(
+                page.locator('#source option[value="google"]')
+            ).to_have_count(1)
+            page.get_by_label("Import from", exact=True).select_option(
+                "google"
+            )
+            expect(page.get_by_label("Google Sheets link")).to_be_visible()
+            expect(page.get_by_label("Import behavior")).to_have_value("once")
+            expect(page.get_by_label("Connection name")).to_be_hidden()
+            page.get_by_label("Import behavior").select_option("sync")
+            expect(page.get_by_label("Connection name")).to_be_visible()
+            expect(page.get_by_label("Connection name")).to_have_attribute(
+                "required", ""
+            )
+            expect(
+                page.get_by_role("button", name="Connect and review")
+            ).to_be_visible()
+            assert page.evaluate(
+                "document.documentElement.scrollWidth <= window.innerWidth"
+            )
+            folder = (
+                Path(__file__).resolve().parents[1]
+                / ".venv"
+                / "browser-review"
+            )
+            folder.mkdir(exist_ok=True)
+            page.screenshot(
+                path=str(folder / f"import-setup-{width}.png"), full_page=True
+            )
             page.get_by_label("Import from", exact=True).select_option("paste")
+            expect(page.get_by_label("Import behavior")).to_be_disabled()
+            expect(page.get_by_label("Connection name")).to_be_disabled()
             page.get_by_label("Paste table rows", exact=True).fill(
                 "Role\tEmployer\tApplied on\tStage\n"
                 "Engineer\tExample\t06/10/2026\tWaiting for recruiter\n"
@@ -73,12 +104,6 @@ def test_import_browser_flow(app, users, width):
             assert page.evaluate(
                 "document.documentElement.scrollWidth <= window.innerWidth"
             )
-            folder = (
-                Path(__file__).resolve().parents[1]
-                / ".venv"
-                / "browser-review"
-            )
-            folder.mkdir(exist_ok=True)
             page.screenshot(
                 path=str(folder / f"import-review-{width}.png"), full_page=True
             )

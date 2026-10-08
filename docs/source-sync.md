@@ -1,7 +1,11 @@
 # Connect and sync an external tracker
 
-Sign in and choose **Data tools → Connected sources** (`/sources`).
-Name a connection and choose Google Sheets shared/private access or Notion.
+Sign in and choose **Data tools → Import & sync** (`/imports`).
+Choose Google Sheets or Notion and **Keep connected for syncing**. Name the
+connection and choose a sync frequency. Google Sheets offers shared-link or
+private access within the same form. Existing connections are available through
+**Manage connected sources** (`/sources`); **Connect a source** returns to the
+shared setup form.
 Sync pulls data into this tracker; it does not write to providers.
 
 ## Custom selections and mappings

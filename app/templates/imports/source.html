@@ -1,20 +1,35 @@
 {% extends "base.html" %}
 {% from "macros/forms.html" import csrf_field %}
-{% block title %}Import applications - Job Tracker{% endblock %}
+{% set choices = request.form if request.method == 'POST' else request.args %}
+{% set selected_source = choices.get('source', 'file') %}
+{% set selected_mode = choices.get('import_mode', 'once') %}
+{% set selected_access = request.form.get('sheet_access', 'private' if selected_source == 'private' else 'public') %}
+{% if selected_source in ['public', 'private'] %}{% set selected_source = 'google' %}{% endif %}
+{% block title %}Import & sync - Job Tracker{% endblock %}
 {% block content %}
-<h2>Import applications</h2>
-<p class="text-muted">Bring your existing tracker with you. Choose a source, check the suggested columns, and preview before saving.</p>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+  <h2 class="mb-0">Import &amp; sync</h2>
+  <a class="btn btn-outline-secondary" href="{{ url_for('sources.index') }}">Manage connected sources</a>
+</div>
+<p class="text-muted">Bring your existing tracker with you. Import once, or connect Google Sheets or Notion to pull future changes. Review your columns and preview before saving.</p>
 <section class="card"><div class="card-body">
 <form method="POST" enctype="multipart/form-data">
   {{ csrf_field() }}
   <div class="mb-3"><label class="form-label" for="source">Import from</label>
     <select class="form-select" id="source" name="source">
-      <option value="file" {{ 'selected' if request.form.get('source', 'file') == 'file' }}>Upload a file</option>
-      <option value="paste" {{ 'selected' if request.form.get('source') == 'paste' }}>Paste a table</option>
-      <option value="public" {{ 'selected' if request.form.get('source') == 'public' }}>Google Sheets shared link</option>
-      <option value="notion" {{ 'selected' if request.form.get('source') == 'notion' }}>Notion database or data source</option>
-      {% if config.GOOGLE_LOGIN_ENABLED %}<option value="private" {{ 'selected' if request.form.get('source') == 'private' }}>Google Sheets private access</option>{% endif %}
+      <option value="file" {{ 'selected' if selected_source == 'file' }}>Upload a file</option>
+      <option value="paste" {{ 'selected' if selected_source == 'paste' }}>Paste a table</option>
+      <option value="google" {{ 'selected' if selected_source == 'google' }}>Google Sheets</option>
+      <option value="notion" {{ 'selected' if selected_source == 'notion' }}>Notion database or data source</option>
     </select>
+  </div>
+  <div class="mb-3" data-import-source="google notion">
+    <label class="form-label" for="import_mode">Import behavior</label>
+    <select class="form-select" id="import_mode" name="import_mode">
+      <option value="once" {{ 'selected' if selected_mode == 'once' }}>Import once</option>
+      <option value="sync" {{ 'selected' if selected_mode == 'sync' }}>Keep connected for syncing</option>
+    </select>
+    <p class="form-text">Import once copies the current rows. A connection remembers your mapping so you can sync later changes into this tracker.</p>
   </div>
   <div class="mb-3" data-import-source="file"><label for="file" class="form-label">Spreadsheet or data file</label>
     <input id="file" name="file" class="form-control" type="file" accept=".xlsx,.xls,.ods,.csv,.tsv,.txt,.json,.jsonl,.ndjson">
@@ -23,14 +38,20 @@
   <div class="mb-3" data-import-source="paste"><label for="text" class="form-label">Paste table rows</label>
     <textarea id="text" name="text" class="form-control" rows="8" placeholder="Copy cells from Google Sheets, Excel, or another table, including column headings.">{{ request.form.get('text', '') }}</textarea>
   </div>
-  <div class="mb-3" data-import-source="public private"><label for="sheet_url" class="form-label">Google Sheets link</label>
+  <div class="mb-3" data-import-source="google">
+    <label for="sheet_access" class="form-label">Sheet access</label>
+    <select id="sheet_access" name="sheet_access" class="form-select mb-3">
+      <option value="public" {{ 'selected' if selected_access == 'public' }}>Shared link</option>
+      {% if config.GOOGLE_LOGIN_ENABLED %}<option value="private" {{ 'selected' if selected_access == 'private' }}>Private sheet (authorize with Google)</option>{% endif %}
+    </select>
+    <label for="sheet_url" class="form-label">Google Sheets link</label>
     <input id="sheet_url" name="sheet_url" class="form-control" type="url" maxlength="2048" placeholder="https://docs.google.com/spreadsheets/d/.../edit" value="{{ request.form.get('sheet_url', '') }}">
     <label for="cell_range" class="form-label mt-2">Cell range (optional)</label>
     <input id="cell_range" name="cell_range" class="form-control" maxlength="40" placeholder="B4:N200" value="{{ request.form.get('cell_range', '') }}">
     <p class="form-text">Include the heading row. Leave empty to read the tab. Header row numbers on the next screen are relative to this selection.</p>
-    <p class="form-text">Shared links read the linked tab. Private access asks Google for read-only Sheets access once for this import. You can also keep sharing private and upload a downloaded file.</p>
+    <p class="form-text">Shared links must be accessible without signing in. Choose the tab in your link. Private access asks Google for read-only Sheets access. For a one-time import, access is not saved; a connection saves an encrypted credential for later syncs.</p>
+    {% if not config.GOOGLE_LOGIN_ENABLED %}<p class="form-text">Private Google access is unavailable. Use a shared link, upload a downloaded file, or paste cells.</p>{% endif %}
   </div>
-  {% if not config.GOOGLE_LOGIN_ENABLED %}<p class="form-text">Private Google authorization needs the platform's Google OAuth configuration. File uploads and pasted Google Sheets cells work immediately.</p>{% endif %}
   <div class="mb-3" data-import-source="notion">
     <label for="notion_kind" class="form-label">Notion source type</label>
     <select id="notion_kind" name="notion_kind" class="form-select">
@@ -41,11 +62,26 @@
     <input id="notion_url" name="notion_url" class="form-control" maxlength="2048" value="{{ request.form.get('notion_url', '') }}">
     <label for="notion_token" class="form-label mt-2">Private Notion connection token</label>
     <input id="notion_token" name="notion_token" class="form-control" type="password" autocomplete="off" maxlength="4096">
-    <p class="form-text">Share this database with your Notion connection and grant read access. This one-time import does not save the token. Choose a data source and map properties next.</p>
+    <p class="form-text">Share this database with your Notion connection and grant read access. A one-time import does not save the token; a sync connection encrypts it until you disconnect. Choose a data source and map properties next.</p>
   </div>
-  <button class="btn btn-primary" type="submit">Read source</button>
+  <div data-import-source="google notion" data-import-mode="sync">
+    <div class="mb-3">
+      <label for="name" class="form-label">Connection name</label>
+      <input id="name" name="name" class="form-control" maxlength="80" placeholder="My application tracker" value="{{ request.form.get('name', '') }}">
+    </div>
+    <div class="mb-3">
+      <label for="interval" class="form-label">Sync frequency</label>
+      <select id="interval" name="interval" class="form-select">
+        {% for value, label in [('0', 'Manual: Sync now'), ('15', 'Every 15 minutes'), ('60', 'Every hour')] %}
+        <option value="{{ value }}" {{ 'selected' if request.form.get('interval', '0') == value }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <p class="form-text">Automatic syncing starts after you confirm the first preview. Sync pulls changes into your tracker and preserves conflicting tracker edits. You can change the frequency or disconnect later.</p>
+    </div>
+  </div>
+  <button class="btn btn-primary" type="submit" id="read-source">Read source</button>
 </form>
 </div></section>
-<p class="form-text mt-3">Nothing is added until you confirm the preview. Column suggestions run locally on this server. Previews are available for 30 minutes. Source data is cleared when you confirm or cancel; expired previews are removed during cleanup.</p>
+<p class="form-text mt-3">No applications are added until you confirm the preview. Column suggestions run locally on this server. Previews are available for 30 minutes. Preview data is cleared when you confirm or cancel; expired previews are removed during cleanup.</p>
 <script src="{{ url_for('static', filename='js/imports.js') }}" defer></script>
 {% endblock %}

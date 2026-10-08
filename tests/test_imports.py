@@ -462,8 +462,9 @@ def test_google_public_redirect_controls_and_bounded_read(monkeypatch):
         read_public_sheet(reference)
 
 
+@pytest.mark.parametrize("source", ["private", "google"])
 def test_private_google_authorization_is_optional_account_bound_and_transient(
-    app_factory, monkeypatch
+    app_factory, monkeypatch, source
 ):
     app = app_factory(**GOOGLE_CONFIG)
     with app.app_context():
@@ -482,7 +483,9 @@ def test_private_google_authorization_is_optional_account_bound_and_transient(
         "/imports",
         base_url=BASE_URL,
         data={
-            "source": "private",
+            "source": source,
+            "sheet_access": "private",
+            "import_mode": "once",
             "intent": "signin",
             "sheet_url": (
                 "https://docs.google.com/spreadsheets/d/fictionalSheet12"

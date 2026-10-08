@@ -529,8 +529,9 @@ def test_public_source_routes_connect_map_review_confirm_disconnect(
         )
 
 
+@pytest.mark.parametrize("setup_path", ["/sources", "/imports"])
 def test_google_sync_requests_offline_scope_and_never_saves_tokens_in_cookie(
-    app_factory, monkeypatch
+    app_factory, monkeypatch, setup_path
 ):
     app = app_factory(
         **GOOGLE_CONFIG, SYNC_ENCRYPTION_KEY=Fernet.generate_key().decode()
@@ -548,11 +549,14 @@ def test_google_sync_requests_offline_scope_and_never_saves_tokens_in_cookie(
         session["_user_id"] = str(user_id)
     provider = mock_google_transport(monkeypatch)
     start = client.post(
-        "/sources",
+        setup_path,
         base_url=BASE_URL,
         data={
             "name": "Private sheet",
             "provider": "google_private",
+            "source": "google",
+            "sheet_access": "private",
+            "import_mode": "sync",
             "interval": "0",
             "sheet_url": "https://docs.google.com/spreadsheets/d/fictionalSheet12345/edit#gid=42",
             "cell_range": "B4:C5",

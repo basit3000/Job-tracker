@@ -72,6 +72,11 @@ def register_security_headers(app):
     @app.after_request
     def security_headers(response):
         response.headers.update(SECURITY_HEADERS)
+        if response.status_code == 200 and response.mimetype == "text/html":
+            # HTTPS form posts need a same-origin Referer for Flask-WTF.
+            # Keep it off external requests and non-page responses, including
+            # OAuth callback redirects and private download redirects.
+            response.headers["Referrer-Policy"] = "same-origin"
         if (
             current_app.config["GOOGLE_LOGIN_ENABLED"]
             and request.endpoint in GOOGLE_FORM_ENDPOINTS

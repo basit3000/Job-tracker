@@ -85,9 +85,7 @@ def test_responsive_navigation_and_keyboard_controls(app, users, width):
                 menu.click()
                 expect(menu).to_have_attribute("aria-expanded", "true")
                 expect(
-                    page.get_by_role(
-                        "link", name="Import applications", exact=False
-                    )
+                    page.get_by_role("link", name="Import & sync", exact=False)
                 ).to_be_visible()
                 expect(
                     page.get_by_role(
@@ -124,6 +122,12 @@ def test_responsive_navigation_and_keyboard_controls(app, users, width):
                     path=str(artifacts / f"navigation-menu-{width}.png"),
                     full_page=True,
                 )
+            expect(
+                page.locator('.header-menu a[href="/imports"]')
+            ).to_have_count(1)
+            expect(
+                page.locator('.header-menu a[href="/sources"]')
+            ).to_have_count(0)
             page.get_by_role(
                 "link", name="Export applications", exact=False
             ).click()

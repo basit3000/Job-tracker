@@ -1,7 +1,19 @@
 # Import existing application trackers
 
-Sign in and choose **Data tools → Import applications**, or open
+Sign in and choose **Data tools → Import & sync**, or open
 `/imports`. Nothing is added until you confirm a reviewed preview.
+
+## Import once or keep connected
+
+Google Sheets has one setup form. Choose **Google Sheets**, select shared-link
+or private access, and choose **Import once** or **Keep connected for syncing**.
+A one-time import copies current rows without saving credentials. A connection
+also asks for a name and sync frequency, then reuses your reviewed mapping for
+later changes. The same choice is available for Notion. Files and pasted tables
+are one-time imports.
+
+Use **Manage connected sources** on the import page for existing connections,
+schedules, and manual syncs. See [source syncing](source-sync.md) for details.
 
 ## Sources
 
@@ -12,7 +24,8 @@ Sign in and choose **Data tools → Import applications**, or open
   column headers when available; tabs and common CSV delimiters are detected.
 - Paste a Google Sheets share URL for a sheet accessible without signing in,
   or a published-to-web URL. The linked tab (`gid`) is respected.
-- Choose **Google Sheets private access** to authorize a selected spreadsheet
+- Choose **Google Sheets**, then **Private sheet (authorize with Google)**
+  to authorize a selected spreadsheet
   without changing its sharing permissions. File download/upload and copy/paste
   remain available when Google OAuth is unconfigured.
 - For either Google Sheets source, optionally enter an exact cell selection such
