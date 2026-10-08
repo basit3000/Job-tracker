@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from app.extensions import db
 from app.google_login import FLOW_KEY, google_client
 from app.models import User
-from app.security import GoogleCallbackLogFilter
+from app.security import PrivateRequestLogFilter
 from tests.google_provider import (
     BASE_URL,
     GOOGLE_CONFIG,
@@ -410,7 +410,7 @@ def test_google_access_log_redaction(logger_name, args, message):
         logger_name, logging.INFO, "", 0, message, (), None
     )
     record.args = args
-    GoogleCallbackLogFilter().filter(record)
+    PrivateRequestLogFilter().filter(record)
     assert "private-code" not in record.getMessage()
     assert "private-state" not in record.getMessage()
     assert "/auth/google/callback" in record.getMessage()

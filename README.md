@@ -238,6 +238,11 @@ verification and commands are in [the deployment guide](docs/deployment.md).
 
 ## Code and privacy conventions
 
+See the [code and privacy review](docs/code-and-privacy-review.md) for applied
+principles, verification, and the remaining personal attribution in Git history.
+Browser fonts, stylesheets, and scripts are served locally; asset versions and
+licenses are documented in `app/static/vendor/README.md`.
+
 Routes handle HTTP input and responses; shared services enforce ownership,
 validation, version checks, and transactions. Browser and API writes use one
 application update path. Shared Jinja macros render fields, badges, dates,

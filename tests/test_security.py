@@ -32,7 +32,6 @@ def test_security_headers(client):
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["X-Frame-Options"] == "DENY"
     assert response.headers["Cache-Control"] == "no-store, private"
-    assert (
-        "script-src 'self' https://cdn.jsdelivr.net;"
-        in response.headers["Content-Security-Policy"]
-    )
+    assert "script-src 'self';" in response.headers["Content-Security-Policy"]
+    assert response.headers["Referrer-Policy"] == "no-referrer"
+    assert "https://" not in response.headers["Content-Security-Policy"]

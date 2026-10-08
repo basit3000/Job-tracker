@@ -109,7 +109,7 @@ class User(UserMixin, db.Model):
         return db.session.get(cls, user_id)
 
     def __repr__(self):
-        return f"<User {self.email}>"
+        return f"<User id={self.id}>"
 
 
 class NotificationPreference(db.Model):
@@ -363,7 +363,7 @@ class JobApplication(db.Model):
         return value if is_http_url(value) else None
 
     def __repr__(self):
-        return f"<JobApplication {self.job_title} @ {self.company}>"
+        return f"<JobApplication id={self.id}>"
 
 
 class StatusEvent(db.Model):

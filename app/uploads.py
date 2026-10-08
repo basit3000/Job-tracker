@@ -51,7 +51,8 @@ def delete_resume(filename):
         path.unlink(missing_ok=True)
     except OSError:
         # Cleanup failure must not make a committed change appear to fail.
-        current_app.logger.exception("Could not remove a retired resume file.")
+        # File exceptions include private paths; record only the failure.
+        current_app.logger.warning("Could not remove a retired resume file.")
 
 
 def save_resume(file_storage):
