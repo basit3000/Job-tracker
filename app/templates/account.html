@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 {% from "macros/forms.html" import field %}
-{% block title %}Account settings - Job Scout Tracker{% endblock %}
+{% block title %}Account settings - Job Tracker{% endblock %}
 {% block content %}
 <div class="row justify-content-center py-4">
   <div class="col-lg-7">
     <h1 class="h3 mb-4">Account settings</h1>
+    <p><a href="{{ url_for('community.settings') }}">Profile, privacy &amp; daily goal</a> &middot; <a href="{{ url_for('community.index') }}">Community &amp; friends</a></p>
     <div class="card"><div class="card-body p-4">
       <p><strong>Email:</strong> {{ current_user.email }}</p>
       <p><strong>Email/password sign-in:</strong> {{ 'Available' if current_user.password_hash else 'Use Google to sign in' }}</p>

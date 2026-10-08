@@ -1,0 +1,67 @@
+{% from "macros/navigation.html" import nav_link, tool_link with context %}
+{% from "macros/forms.html" import csrf_field %}
+{% set application_section = request.blueprint == 'jobs' and request.endpoint not in ['jobs.dashboard', 'jobs.follow_ups'] %}
+{% set data_section = request.blueprint in ['imports', 'exports', 'sources', 'integrations'] %}
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="app-header">
+  <div class="header-bar container">
+    <a class="app-brand" href="{{ url_for('main.home') }}" aria-label="Job Tracker home">
+      <span class="brand-mark"><i class="bi bi-briefcase" aria-hidden="true"></i></span>
+      <span><strong>Job Tracker</strong><small>Your job search, organized</small></span>
+    </a>
+    {% if current_user.is_authenticated %}
+      <div class="header-actions">
+        <a class="btn btn-primary header-add" href="{{ url_for('jobs.add_job') }}" aria-label="Add application"{% if request.endpoint == 'jobs.add_job' %} aria-current="page"{% endif %}>
+          <i class="bi bi-plus-lg" aria-hidden="true"></i><span class="add-label-full">Add application</span><span class="add-label-short" aria-hidden="true">Add</span>
+        </a>
+        <button class="navbar-toggler header-menu-toggle" type="button" aria-controls="headerTools" aria-expanded="false">
+          <i class="bi bi-list" aria-hidden="true"></i><span>Menu</span>
+        </button>
+      </div>
+      <div id="headerTools" class="collapse header-tools">
+        <div class="dropdown header-dropdown">
+          <button id="dataToolsToggle" class="header-tool dropdown-toggle{{ ' is-active' if data_section }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-arrow-down-up" aria-hidden="true"></i>Data tools
+          </button>
+          <p class="mobile-menu-heading">Data tools</p>
+          <ul class="dropdown-menu dropdown-menu-end header-menu" aria-label="Data tools">
+            {{ tool_link('Import applications', 'Bring in a spreadsheet or file', 'imports.index', 'box-arrow-in-down') }}
+            {{ tool_link('Export applications', 'Download a copy of your records', 'exports.index', 'box-arrow-up-right') }}
+            <li><hr class="dropdown-divider"></li>
+            {{ tool_link('Connected sources', 'Keep Google Sheets or Notion in sync', 'sources.index', 'arrow-repeat') }}
+            {{ tool_link('Job Scout connection', 'Pair your Job Scout app', 'integrations.index', 'link-45deg') }}
+          </ul>
+        </div>
+        <div class="dropdown header-dropdown">
+          <button id="accountToggle" class="header-tool dropdown-toggle{{ ' is-active' if request.endpoint in ['google_auth.account', 'community.settings', 'notifications.settings'] }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle" aria-hidden="true"></i>Account
+          </button>
+          <p class="mobile-menu-heading">Account</p>
+          <ul class="dropdown-menu dropdown-menu-end header-menu account-menu" aria-label="Account">
+            <li class="account-summary"><strong>{{ current_user.profile_name if current_user.handle else 'Your account' }}</strong><small>{{ current_user.email }}</small></li>
+            <li><hr class="dropdown-divider"></li>
+            {% if current_user.handle %}<li><a class="dropdown-item" href="{{ url_for('community.profile', handle=current_user.handle) }}"><i class="bi bi-person me-2" aria-hidden="true"></i>View my profile</a></li>{% endif %}
+            <li><a class="dropdown-item" href="{{ url_for('community.settings') }}"{% if request.endpoint == 'community.settings' %} aria-current="page"{% endif %}><i class="bi bi-shield-check me-2" aria-hidden="true"></i>Profile &amp; privacy</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('google_auth.account') }}"{% if request.endpoint == 'google_auth.account' %} aria-current="page"{% endif %}><i class="bi bi-gear me-2" aria-hidden="true"></i>Account settings</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('notifications.settings') }}"{% if request.endpoint == 'notifications.settings' %} aria-current="page"{% endif %}><i class="bi bi-bell me-2" aria-hidden="true"></i>Notifications</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><form action="{{ url_for('auth.logout') }}" method="POST">{{ csrf_field() }}<button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Log out</button></form></li>
+          </ul>
+        </div>
+      </div>
+    {% else %}
+      <nav class="guest-navigation" aria-label="Account">
+        <a class="guest-login" href="{{ url_for('auth.login') }}"{% if request.endpoint == 'auth.login' %} aria-current="page"{% endif %}>Log in</a>
+        {% if config.PUBLIC_SIGNUP_ENABLED %}<a class="btn btn-primary" href="{{ url_for('auth.register') }}">Get started</a>{% endif %}
+      </nav>
+    {% endif %}
+  </div>
+  {% if current_user.is_authenticated %}
+    <div class="workspace-navigation"><nav class="container workspace-links" aria-label="Main navigation">
+      {{ nav_link('Overview', 'jobs.dashboard', 'grid-1x2', request.endpoint == 'jobs.dashboard') }}
+      {{ nav_link('Applications', 'jobs.job_list', 'collection', application_section) }}
+      {{ nav_link('Follow-ups', 'jobs.follow_ups', 'calendar-check', request.endpoint == 'jobs.follow_ups') }}
+      {{ nav_link('Community', 'community.index', 'people', request.blueprint == 'community') }}
+    </nav></div>
+  {% endif %}
+</header>

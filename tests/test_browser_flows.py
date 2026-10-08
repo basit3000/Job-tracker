@@ -102,10 +102,10 @@ def test_main_browser_flows(app, users, tmp_path, viewport):
                 page.get_by_text("Applied → Interviewing", exact=False)
             ).to_be_visible()
             for path, heading in (
-                ("/dashboard", "Dashboard"),
-                ("/jobs", "My Applications"),
+                ("/dashboard", "Overview"),
+                ("/jobs", "Applications"),
                 ("/board", "Status board"),
-                ("/follow-ups?due=upcoming", "Follow-up queue"),
+                ("/follow-ups?due=upcoming", "Follow-ups"),
                 ("/integrations", "Job Scout connection"),
             ):
                 page.goto(origin + path)
@@ -139,8 +139,9 @@ def test_main_browser_flows(app, users, tmp_path, viewport):
             ).to_be_visible()
             if viewport["width"] < 600:
                 page.locator(".navbar-toggler").click()
-            page.locator(".dropdown-toggle").click()
-            page.get_by_role("button", name="Logout", exact=True).click()
+            else:
+                page.get_by_role("button", name="Account", exact=True).click()
+            page.get_by_role("button", name="Log out", exact=True).click()
             expect(page).to_have_url(origin + "/login")
             assert errors == []
             context.close()
@@ -223,8 +224,11 @@ def test_public_registration_and_google_browser_flows(
             def logout():
                 if width < 600:
                     page.locator(".navbar-toggler").click()
-                page.locator(".dropdown-toggle").click()
-                page.get_by_role("button", name="Logout", exact=True).click()
+                else:
+                    page.get_by_role(
+                        "button", name="Account", exact=True
+                    ).click()
+                page.get_by_role("button", name="Log out", exact=True).click()
                 expect(page).to_have_url(origin + "/login")
 
             page.goto(origin + "/register")

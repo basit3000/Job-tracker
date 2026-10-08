@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "macros/forms.html" import csrf_field %}
-{% block title %}Review import - Job Scout Tracker{% endblock %}
+{% block title %}Review import - Job Tracker{% endblock %}
 {% block content %}
 <h2>Review your import</h2><p>Ready: <strong>{{ counts.ready }}</strong> · Duplicate rows skipped: <strong>{{ counts.duplicates }}</strong> · Invalid rows: <strong>{{ counts.invalid }}</strong></p>
 {% if counts.invalid %}<div class="alert alert-warning" role="alert">{{ 'Invalid rows will be skipped, as you selected.' if batch.options.skip_invalid else 'Resolve invalid rows or return to mapping and explicitly choose to skip them.' }}</div>{% endif %}

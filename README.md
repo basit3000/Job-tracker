@@ -1,4 +1,4 @@
-# Job Scout Tracker
+# Job Tracker
 
 The Overview includes a 28-day application chart, a 12-week consistency calendar, current/longest streaks, XP, goals, and milestone badges. Optional daily email nudges are available in **Account → Notifications**. See [email reminder setup](docs/notifications.md) for SMTP configuration and the background worker. Email delivery defaults to off.
 
@@ -37,6 +37,10 @@ factory, blueprints, SQLAlchemy models, Jinja templates, and resume storage.
   conflict review, and revocation using fictional records.
 - Docker deployment with Gunicorn, PostgreSQL roles for migration/runtime access,
   Redis rate limits, tracked migrations, and documented backup/recovery.
+- Optional community profiles with public/private visibility, mutual friend
+  requests, friend comparisons, and explicitly enabled sharing of applied jobs.
+- Daily application goals, best-day records, streaks, XP, levels, activity charts,
+  and milestones derived from your existing application records.
 
 The reference client is working demonstration code. Connecting the installed
 Job Scout application still requires a dedicated adapter; see the
@@ -147,6 +151,13 @@ steps, local testing, HTTPS deployment, and connecting an existing account.
 
 ## Community and progress
 
+The header keeps **Overview**, **Applications**, **Follow-ups**, and **Community**
+visible. Switch between list and status board inside Applications. Use **Data
+tools** for imports, exports, and connections; use **Account** for profile/privacy,
+sign-in settings, and logout. **Add application** is always available in the header.
+On phones, **Menu** opens data tools and account settings while the main sections
+remain visible.
+
 Open **Community** in the header. Choose a username
 in **Account → Profile & privacy**, set a goal, and decide who can see your profile.
 Existing and new accounts default to private with job sharing off. Public means
@@ -182,7 +193,7 @@ runtime permissions, including deletion of friendship requests/connections.
 
 ## API and reference client
 
-Import an existing tracker from the account menu's **Import applications** entry.
+Import an existing tracker from **Data tools → Import applications**.
 See [the import guide](docs/importing.md) for supported formats, smart mapping,
 private Google Sheets authorization and preview cleanup. Apply migration
 `f70a93bd2158` when updating an existing database.

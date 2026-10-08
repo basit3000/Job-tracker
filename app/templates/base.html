@@ -1,10 +1,9 @@
-{% from "macros/forms.html" import csrf_field %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}Job Scout Tracker{% endblock %}</title>
+  <title>{% block title %}Job Tracker{% endblock %}</title>
   <link href="{{ url_for('static', filename='css/fonts.css') }}" rel="stylesheet">
   <link
     href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}"
@@ -16,63 +15,9 @@
 </head>
 <body>
 
-  <nav class="navbar navbar-expand-lg sticky-top">
-    <div class="container">
-      <a class="navbar-brand" href="{{ url_for('main.home') }}">
-        <i aria-hidden="true" class="bi bi-briefcase-fill me-2"></i>Job Scout Tracker
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation" aria-controls="navbarNav" aria-expanded="false">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
-          {% if current_user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link {{ 'active' if request.endpoint == 'jobs.dashboard' }}" href="{{ url_for('jobs.dashboard') }}"><i aria-hidden="true" class="bi bi-grid-1x2 me-1"></i>Dashboard</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {{ 'active' if request.endpoint == 'jobs.job_list' }}" href="{{ url_for('jobs.job_list') }}"><i aria-hidden="true" class="bi bi-list-check me-1"></i>My Jobs</a>
-            </li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('jobs.status_board') }}">Board</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('community.index') }}">Community</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('jobs.follow_ups') }}">Follow-ups</a></li>
-            <li class="nav-item">
-              <a class="nav-link {{ 'active' if request.endpoint == 'jobs.add_job' }}" href="{{ url_for('jobs.add_job') }}"><i aria-hidden="true" class="bi bi-plus-circle me-1"></i>Add Job</a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                <i aria-hidden="true" class="bi bi-person-circle me-1"></i>{{ current_user.email }}
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{{ url_for('google_auth.account') }}">Account settings</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('notifications.settings') }}">Notifications</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('community.settings') }}">Profile &amp; privacy</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('integrations.index') }}">Job Scout connection</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('exports.index') }}">Export applications</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('imports.index') }}">Import applications</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('sources.index') }}">Connected sources</a></li>
-                <li>
-                  <form action="{{ url_for('auth.logout') }}" method="POST">
-                    {{ csrf_field() }}
-                    <button type="submit" class="dropdown-item text-danger"><i aria-hidden="true" class="bi bi-box-arrow-right me-2"></i>Logout</button>
-                  </form>
-                </li>
-              </ul>
-            </li>
-          {% else %}
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
-            </li>
-            {% if config.PUBLIC_SIGNUP_ENABLED %}<li class="nav-item">
-              <a class="btn btn-primary btn-sm px-3" href="{{ url_for('auth.register') }}">Get started</a>
-            </li>{% endif %}
-          {% endif %}
-        </ul>
-      </div>
-    </div>
-  </nav>
+  {% include "navigation.html" %}
 
-  <main class="container">
+  <main class="container" id="main-content" tabindex="-1">
     <div id="connection-state" class="alert alert-warning" role="status" hidden>You appear offline. Reconnect and reload before saving. Unsaved form changes have not been sent.</div>
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -87,12 +32,19 @@
       {% endif %}
     {% endwith %}
 
+    {% if current_user.is_authenticated and request.blueprint == 'jobs' and request.endpoint not in ['jobs.dashboard', 'jobs.follow_ups', 'jobs.add_job', 'jobs.edit_job', 'jobs.job_detail'] %}
+    <nav class="application-views" aria-label="Application views">
+      <span>View</span>
+      <a href="{{ url_for('jobs.job_list') }}" class="{{ 'is-active' if request.endpoint == 'jobs.job_list' }}"{% if request.endpoint == 'jobs.job_list' %} aria-current="page"{% endif %}><i class="bi bi-list-ul" aria-hidden="true"></i>List</a>
+      <a href="{{ url_for('jobs.status_board') }}" class="{{ 'is-active' if request.endpoint == 'jobs.status_board' }}"{% if request.endpoint == 'jobs.status_board' %} aria-current="page"{% endif %}><i class="bi bi-kanban" aria-hidden="true"></i>Status board</a>
+    </nav>
+    {% endif %}
     {% block content %}{% endblock %}
   </main>
 
   <footer>
     <div class="container">
-      <p class="mb-0">&copy; {{ current_year }} Job Scout Tracker &middot; Built with Flask</p>
+      <p class="mb-0">&copy; {{ current_year }} Job Tracker &middot; Your job search, organized</p>
     </div>
   </footer>
 
@@ -100,5 +52,6 @@
     src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"
   ></script>
   <script src="{{ url_for('static', filename='js/forms.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/navigation.js') }}" defer></script>
 </body>
 </html>

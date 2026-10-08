@@ -1,6 +1,6 @@
 # Import existing application trackers
 
-Sign in and choose **Import applications** from your account menu, or open
+Sign in and choose **Data tools → Import applications**, or open
 `/imports`. Nothing is added until you confirm a reviewed preview.
 
 ## Sources
