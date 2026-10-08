@@ -1,32 +1,47 @@
-"""Migrate separately, then serve with the runtime database role."""
+"""Container startup with platform ports and optional release migrations."""
 
+import argparse
 import os
 import subprocess
+import sys
 
 
-def main():
+def _positive_integer(name, default, maximum):
+    try:
+        value = int(os.environ.get(name, default))
+    except ValueError:
+        raise ValueError(f"{name} must be a positive integer.") from None
+    if not 1 <= value <= maximum:
+        raise ValueError(f"{name} must be between 1 and {maximum}.")
+    return str(value)
+
+
+def main(*, skip_migrations=False):
+    port = _positive_integer("PORT", "5000", 65535)
+    workers = _positive_integer("WEB_CONCURRENCY", "3", 32)
+    if not skip_migrations:
+        subprocess.run([sys.executable, "ops/migrate.py"], check=True)
     environment = os.environ.copy()
-    migration_url = environment.get("MIGRATION_DATABASE_URL")
-    if migration_url:
-        environment["DATABASE_URL"] = migration_url
-    subprocess.run(
-        ["flask", "--app", "run.py", "db", "upgrade"],
-        env=environment,
-        check=True,
-    )
-    if migration_url:
-        subprocess.run(
-            ["flask", "--app", "run.py", "grant-runtime"],
-            env=environment,
-            check=True,
-        )
-    # The Gunicorn workers must not inherit schema-owner credentials.
-    os.environ.pop("MIGRATION_DATABASE_URL", None)
-    os.execvp(
+    environment.pop("MIGRATION_DATABASE_URL", None)
+    # Prevent dotenv from reintroducing schema-owner credentials in workers.
+    environment["PYTHON_DOTENV_DISABLED"] = "1"
+    os.execvpe(
         "gunicorn",
-        ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "3", "run:app"],
+        [
+            "gunicorn",
+            "--bind",
+            f"0.0.0.0:{port}",
+            "--workers",
+            workers,
+            "--timeout",
+            "120",
+            "wsgi:app",
+        ],
+        environment,
     )
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--skip-migrations", action="store_true")
+    main(skip_migrations=parser.parse_args().skip_migrations)

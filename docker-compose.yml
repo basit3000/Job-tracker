@@ -9,6 +9,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:?Set a private random SECRET_KEY in .env}
       DATABASE_URL: postgresql://tracker_runtime:${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}@db:5432/${POSTGRES_DB:-jobtracker}
       MIGRATION_DATABASE_URL: postgresql://tracker_migrator:${MIGRATOR_DB_PASSWORD:?Set MIGRATOR_DB_PASSWORD in .env}@db:5432/${POSTGRES_DB:-jobtracker}
+      GRANT_RUNTIME_ROLE: "true"
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
       PUBLIC_SIGNUP_ENABLED: ${PUBLIC_SIGNUP_ENABLED:-true}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
