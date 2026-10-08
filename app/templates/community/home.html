@@ -4,15 +4,15 @@
 {% block title %}Home - Job Tracker{% endblock %}
 {% block content %}
 <div class="social-heading">
-  <div><p class="community-eyebrow">Your next chapter, together</p><h1>Home</h1><p class="text-muted mb-0">Find a little inspiration. Share the journey. Take your next step.</p></div>
+  <div><h1>Home</h1><p class="text-muted mb-0">Your search. Your community.</p></div>
   <a class="btn btn-outline-primary" href="{{ url_for('community.settings') }}"><i class="bi bi-person-circle" aria-hidden="true"></i> {{ 'My profile & sharing' if current_user.handle else 'Set up my profile' }}</a>
 </div>
 
 <section class="home-insights" aria-labelledby="insight-heading">
   <div class="insight-intro"><h2 id="insight-heading">Your progress</h2><a href="{{ url_for('jobs.dashboard') }}">See all insights <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div>
-  <a class="home-stat" href="{{ url_for('jobs.dashboard') }}"><span class="home-stat-icon"><i class="bi bi-calendar-week" aria-hidden="true"></i></span><span><strong>{{ progress.week }}</strong><span>Applied in the last 7 days</span></span></a>
-  <a class="home-stat" href="{{ url_for('jobs.job_list') }}"><span class="home-stat-icon"><i class="bi bi-briefcase" aria-hidden="true"></i></span><span><strong>{{ active_count }}</strong><span>In progress</span></span></a>
-  <a class="home-stat" href="{{ url_for('jobs.follow_ups', due='due') }}"><span class="home-stat-icon"><i class="bi bi-calendar-check" aria-hidden="true"></i></span><span><strong>{{ due_count }}</strong><span>Follow-ups due</span></span></a>
+  <a class="home-stat" href="{{ url_for('jobs.dashboard') }}"><span><strong>{{ progress.week }}</strong><span>Applied in the last 7 days</span></span></a>
+  <a class="home-stat" href="{{ url_for('jobs.job_list') }}"><span><strong>{{ active_count }}</strong><span>In progress</span></span></a>
+  <a class="home-stat" href="{{ url_for('jobs.follow_ups', due='due') }}"><span><strong>{{ due_count }}</strong><span>Follow-ups due</span></span></a>
 </section>
 
 <nav class="home-jumps" aria-label="Home shortcuts">
@@ -22,7 +22,7 @@
 </nav>
 <div class="social-layout">
   <section class="social-feed" aria-labelledby="feed-heading">
-    <div class="feed-heading"><div><h2 id="feed-heading">Community feed</h2><p>Shared applications from people on the same journey.</p></div><a href="{{ url_for('community.index') }}">Find people</a></div>
+    <div class="feed-heading"><h2 id="feed-heading">Community feed</h2><a href="{{ url_for('community.index') }}">Find people</a></div>
     <div class="feed-controls">
       <nav class="feed-tabs" aria-label="Community feeds">
         {% for key, label in feeds.items() %}<a href="{{ url_for('main.home', feed=key, q=search, _anchor='feed-heading') }}" class="{{ 'is-active' if feed == key }}"{% if feed == key %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
@@ -37,6 +37,7 @@
       {% if search %}<p class="feed-results">{{ pagination.total }} result{{ '' if pagination.total == 1 else 's' }} for “{{ search }}”. <a href="{{ url_for('main.home', feed=feed, _anchor='feed-heading') }}">Clear search</a></p>{% endif %}
     </div>
 
+    <div class="feed-stream">
     {% for item in pagination.items %}
     <article class="feed-card" aria-labelledby="role-{{ item.job.public_id }}">
       <header class="feed-person">
@@ -50,7 +51,7 @@
       </div>
       <footer class="feed-actions">
         <form method="POST" action="{{ url_for('community.save_shared_job', handle=item.handle, public_id=item.job.public_id) }}">
-          {{ csrf_field() }}<button class="btn btn-primary" type="submit" aria-label="Save {{ item.job.job_title }} at {{ item.job.company }} to my shortlist"><i class="bi bi-bookmark-plus" aria-hidden="true"></i> Save to shortlist</button>
+          {{ csrf_field() }}<button class="btn btn-outline-primary" type="submit" aria-label="Save {{ item.job.job_title }} at {{ item.job.company }} to my shortlist"><i class="bi bi-bookmark-plus" aria-hidden="true"></i> Save to shortlist</button>
         </form>
         {% if item.job.safe_job_url %}<a class="btn btn-outline-secondary" href="{{ item.job.safe_job_url }}" target="_blank" rel="noopener noreferrer" aria-label="View posting for {{ item.job.job_title }} at {{ item.job.company }} (opens in a new tab)">View posting <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>{% endif %}
       </footer>
@@ -65,6 +66,7 @@
       {% if pagination.page > 1 %}<a class="d-block mt-3" href="{{ url_for('main.home', feed=feed, q=search) }}">Back to the first page</a>{% endif %}
     </div>
     {% endfor %}
+    </div>
     {% if pagination.pages > 1 %}
     <nav class="feed-pagination" aria-label="Feed pages">
       {% if pagination.has_prev %}<a class="btn btn-outline-primary" href="{{ url_for('main.home', feed=feed, q=search, page=pagination.prev_num, _anchor='feed-heading') }}">Newer</a>{% else %}<span></span>{% endif %}
@@ -76,16 +78,6 @@
   </section>
 
   <aside class="home-sidebar" aria-label="Your next steps and community">
-    <section class="home-panel goal-panel" aria-labelledby="goal-heading">
-      <span class="panel-icon"><i class="bi bi-sun" aria-hidden="true"></i></span>
-      <h2 id="goal-heading">A little progress today</h2>
-      <p>Every step counts. Go at your own pace.</p>
-      <div class="goal-count"><strong>{{ progress.today }} <span>/ {{ current_user.daily_goal }}</span></strong><span>daily goal</span></div>
-      <progress class="community-progress" value="{{ [progress.today, current_user.daily_goal]|min }}" max="{{ current_user.daily_goal }}" aria-label="Daily application goal">{{ progress.today }} of {{ current_user.daily_goal }}</progress>
-      <p class="small mt-3">{% if progress.today >= current_user.daily_goal %}Goal reached. Take a moment to celebrate.{% else %}A good application matters more than a perfect streak.{% endif %}</p>
-      <a href="{{ url_for('community.settings') }}">Adjust my goal</a>
-    </section>
-
     {% if incoming_count %}
     <section class="home-panel" aria-labelledby="requests-heading">
       <h2 id="requests-heading">Friend requests <span class="count-pill">{{ incoming_count }}</span></h2>
@@ -101,9 +93,16 @@
       <a class="sidebar-link" href="{{ url_for('imports.index') }}">Import &amp; sync <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
     </section>
 
+    <section class="home-panel goal-panel" aria-labelledby="goal-heading">
+      <div class="goal-count"><h2 id="goal-heading">Daily goal</h2><strong>{{ progress.today }} <span>/ {{ current_user.daily_goal }}</span></strong></div>
+      <progress class="community-progress" value="{{ [progress.today, current_user.daily_goal]|min }}" max="{{ current_user.daily_goal }}" aria-label="Daily application goal">{{ progress.today }} of {{ current_user.daily_goal }}</progress>
+      {% if progress.today >= current_user.daily_goal %}<p class="small mt-3">Goal reached for today.</p>{% endif %}
+      <a href="{{ url_for('community.settings') }}">Adjust my goal</a>
+    </section>
+
     <section class="home-panel" aria-labelledby="people-heading">
       <h2 id="people-heading">Meet the community</h2>
-      {% for person in suggestions %}<div class="suggested-person"><a class="feed-person-link" href="{{ url_for('community.profile', handle=person.handle) }}"><span class="member-avatar" aria-hidden="true">{{ person.profile_name[:1]|upper }}</span><span><strong>{{ person.profile_name }}</strong><span class="feed-handle">@{{ person.handle }}</span></span></a>{% if current_user.handle %}<form method="POST" action="{{ url_for('community.add_friend', handle=person.handle) }}">{{ csrf_field() }}<input type="hidden" name="return_to" value="home"><button class="btn btn-outline-primary" aria-label="Add {{ person.profile_name }} as a friend"><i class="bi bi-person-plus" aria-hidden="true"></i> Add friend</button></form>{% endif %}</div>{% else %}<p>Your next search companion could be a friend you already know. Find them by username.</p>{% endfor %}
+      {% for person in suggestions %}<div class="suggested-person"><a class="feed-person-link" href="{{ url_for('community.profile', handle=person.handle) }}"><span class="member-avatar" aria-hidden="true">{{ person.profile_name[:1]|upper }}</span><span><strong>{{ person.profile_name }}</strong><span class="feed-handle">@{{ person.handle }}</span></span></a>{% if current_user.handle %}<form method="POST" action="{{ url_for('community.add_friend', handle=person.handle) }}">{{ csrf_field() }}<input type="hidden" name="return_to" value="home"><button class="btn btn-outline-primary" aria-label="Add {{ person.profile_name }} as a friend"><i class="bi bi-person-plus" aria-hidden="true"></i> Add</button></form>{% endif %}</div>{% else %}<p>Your next search companion could be a friend you already know. Find them by username.</p>{% endfor %}
       <a class="sidebar-link" href="{{ url_for('community.index', _anchor='find-people') }}">Browse people <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
     </section>
     <p class="sidebar-note"><i class="bi bi-shield-check" aria-hidden="true"></i> You control your sharing. <a href="{{ url_for('community.settings') }}">Profile &amp; privacy</a></p>

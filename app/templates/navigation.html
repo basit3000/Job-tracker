@@ -7,7 +7,7 @@
   <div class="header-bar container">
     <a class="app-brand" href="{{ url_for('main.home') }}" aria-label="Job Tracker home">
       <span class="brand-mark"><i class="bi bi-briefcase" aria-hidden="true"></i></span>
-      <span><strong>Job Tracker</strong><small>Your job search, organized</small></span>
+      <span><strong>Job Tracker</strong></span>
     </a>
     {% if current_user.is_authenticated %}
       <div class="header-actions">
@@ -22,6 +22,7 @@
         </button>
       </div>
       <div id="headerTools" class="collapse header-tools">
+        {% include "theme_toggle.html" %}
         <div class="dropdown header-dropdown">
           <button id="dataToolsToggle" class="header-tool dropdown-toggle{{ ' is-active' if data_section }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-arrow-down-up" aria-hidden="true"></i>Data tools
@@ -53,6 +54,7 @@
       </div>
     {% else %}
       <nav class="guest-navigation" aria-label="Account">
+        {% include "theme_toggle.html" %}
         <a class="guest-login" href="{{ url_for('auth.login') }}"{% if request.endpoint == 'auth.login' %} aria-current="page"{% endif %}>Log in</a>
         {% if config.PUBLIC_SIGNUP_ENABLED %}<a class="btn btn-primary" href="{{ url_for('auth.register') }}">Get started</a>{% endif %}
       </nav>

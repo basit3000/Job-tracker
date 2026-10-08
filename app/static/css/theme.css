@@ -1,0 +1,153 @@
+/* Shared theme tokens also keep Bootstrap controls in sync with the app. */
+:root { color-scheme: light; }
+
+[data-bs-theme="dark"] {
+  color-scheme: dark;
+  --primary: #b0b9ff;
+  --primary-hover: #c7d2fe;
+  --primary-soft: #282a40;
+  --bg: #13151a;
+  --surface: #1b1e25;
+  --text: #e9eaef;
+  --text-muted: #a7adbb;
+  --border: #343944;
+  --status-blue-bg: #22314a;
+  --status-blue-text: #accbff;
+  --status-purple-bg: #332941;
+  --status-purple-text: #d5bafa;
+  --status-green-bg: #213c31;
+  --status-green-text: #9cdfb9;
+  --status-amber-bg: #41351f;
+  --status-amber-text: #f2d08d;
+  --status-red-bg: #41292e;
+  --status-red-text: #f5b1b9;
+  --status-gray-bg: #2d323c;
+  --status-gray-text: #c0c6d2;
+  --bs-body-bg: var(--bg);
+  --bs-body-bg-rgb: 19, 21, 26;
+  --bs-body-color: var(--text);
+  --bs-body-color-rgb: 233, 234, 239;
+  --bs-secondary-color: var(--text-muted);
+  --bs-secondary-color-rgb: 167, 173, 187;
+  --bs-secondary-bg: #252a34;
+  --bs-tertiary-bg: var(--surface);
+  --bs-border-color: var(--border);
+  --bs-emphasis-color: #f8fafc;
+  --bs-emphasis-color-rgb: 248, 250, 252;
+  --bs-link-color: var(--primary);
+  --bs-link-color-rgb: 176, 185, 255;
+  --bs-link-hover-color: var(--primary-hover);
+  --bs-link-hover-color-rgb: 199, 210, 254;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: .5rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: .6rem;
+  color: var(--text);
+  background: var(--surface);
+  font-size: 1.1rem;
+}
+.theme-toggle[hidden] { display: none; }
+.theme-toggle:hover { color: var(--primary); background: var(--primary-soft); }
+.theme-toggle-label, .theme-icon-light { display: none; }
+[data-bs-theme="dark"] .theme-icon-dark { display: none; }
+[data-bs-theme="dark"] .theme-icon-light { display: inline; }
+
+/* Keep bright accent fills separate from the lighter dark-mode link color. */
+[data-bs-theme="dark"] .btn-primary,
+[data-bs-theme="dark"] .brand-mark,
+[data-bs-theme="dark"] .skip-link { background: #4f46e5; border-color: #4f46e5; }
+[data-bs-theme="dark"] .btn-primary:hover,
+[data-bs-theme="dark"] .btn-primary:focus { background: #4338ca; border-color: #4338ca; }
+[data-bs-theme="dark"] .btn-outline-primary {
+  --bs-btn-active-bg: #a5b4fc;
+  --bs-btn-active-border-color: #a5b4fc;
+  --bs-btn-active-color: #13151a;
+}
+[data-bs-theme="dark"] .btn-outline-primary:hover { color: var(--bg); }
+[data-bs-theme="dark"] .text-primary { color: var(--primary) !important; }
+[data-bs-theme="dark"] .text-danger { color: #fca5a5 !important; }
+[data-bs-theme="dark"] .btn-outline-danger {
+  --bs-btn-color: #fca5a5;
+  --bs-btn-border-color: #f87171;
+  --bs-btn-hover-bg: #b91c1c;
+  --bs-btn-hover-border-color: #f87171;
+  --bs-btn-active-bg: #b91c1c;
+  --bs-btn-active-border-color: #f87171;
+}
+[data-bs-theme="dark"] .btn-outline-secondary {
+  --bs-btn-color: #cbd5e1;
+  --bs-btn-border-color: #747e91;
+  --bs-btn-hover-bg: #343944;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-bg: #343944;
+  --bs-btn-active-color: #fff;
+  --bs-btn-disabled-color: #a7adbb;
+}
+[data-bs-theme="dark"] :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline-color: var(--primary);
+}
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select { border-color: #747e91; }
+[data-bs-theme="dark"] .table { --bs-table-bg: var(--surface); }
+[data-bs-theme="dark"] .table tbody tr:hover { background-color: var(--primary-soft); }
+[data-bs-theme="dark"] .header-tool,
+[data-bs-theme="dark"] .workspace-link,
+[data-bs-theme="dark"] .guest-login,
+[data-bs-theme="dark"] .application-views > a,
+[data-bs-theme="dark"] .feed-tabs a { color: var(--text-muted); }
+[data-bs-theme="dark"] .workspace-navigation { border-color: var(--border); }
+[data-bs-theme="dark"] .workspace-link:hover,
+[data-bs-theme="dark"] .application-views > a:hover,
+[data-bs-theme="dark"] .application-views > a.is-active,
+[data-bs-theme="dark"] .header-tool:hover,
+[data-bs-theme="dark"] .header-tool.is-active,
+[data-bs-theme="dark"] .header-tool[aria-expanded="true"],
+[data-bs-theme="dark"] .feed-tabs a:hover {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+[data-bs-theme="dark"] .feed-tabs a.is-active { color: var(--primary); background: transparent; }
+[data-bs-theme="dark"] .feed-empty,
+[data-bs-theme="dark"] .profile-avatar,
+[data-bs-theme="dark"] .people-shortcuts a,
+[data-bs-theme="dark"] .home-jumps a { background: var(--surface); }
+[data-bs-theme="dark"] .board-column,
+[data-bs-theme="dark"] .intensity-0 { background: var(--bg); }
+[data-bs-theme="dark"] .notification-card.is-unread { background: var(--primary-soft); }
+[data-bs-theme="dark"] .goal-panel { background: var(--surface); }
+[data-bs-theme="dark"] .goal-panel,
+[data-bs-theme="dark"] .progress-hub,
+[data-bs-theme="dark"] .profile-hero,
+[data-bs-theme="dark"] .calendar-cell { border-color: var(--border); }
+[data-bs-theme="dark"] .progress-hub,
+[data-bs-theme="dark"] .profile-hero {
+  background: var(--surface);
+}
+[data-bs-theme="dark"] .notification-tabs a[aria-current],
+[data-bs-theme="dark"] .notification-icon,
+[data-bs-theme="dark"] .notification-meta strong,
+[data-bs-theme="dark"] .count-pill { color: var(--primary); }
+[data-bs-theme="dark"] .notification-badge { border-color: var(--surface); }
+[data-bs-theme="dark"] .streak-summary { background: #332719; border-color: #785127; }
+[data-bs-theme="dark"] .streak-symbol { background: #51351d; color: #fdba74; }
+[data-bs-theme="dark"] .streak-best { color: #fdba74; }
+[data-bs-theme="dark"] .achievement.earned { background: #15382b; border-color: #286347; }
+[data-bs-theme="dark"] .achievement.earned > .bi { color: #86efac; }
+[data-bs-theme="dark"] .daily-chart-track {
+  background: repeating-linear-gradient(to top, transparent, transparent 49px, var(--border) 49px, var(--border) 50px);
+}
+
+@media (max-width: 767px) {
+  .header-tools .theme-toggle { justify-self: start; padding-inline: .75rem; }
+  .header-tools .theme-toggle-label { display: inline; font-size: .85rem; }
+  .guest-navigation { gap: .5rem; }
+}

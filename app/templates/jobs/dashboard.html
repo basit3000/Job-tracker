@@ -12,20 +12,12 @@
   </div>
 </div>
 
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4 dashboard-stats">
   {{ stat_card(total, "Total", "collection") }}
   {{ stat_card(active, "In progress", "activity") }}
   {{ stat_card(counts['interviewing'], "Interviewing", "chat-dots") }}
   {{ stat_card(counts['offer'] + counts['accepted'], "Offers", "trophy") }}
 </div>
-
-<section class="progress-hub mb-4">
-  <div class="community-header mb-3"><div><p class="community-eyebrow">Keep your momentum</p><h2 class="h5 mb-0">Your progress</h2></div><a class="btn btn-outline-primary btn-sm" href="{{ url_for('community.index') }}"><i class="bi bi-people me-1" aria-hidden="true"></i>Community &amp; friends</a></div>
-  {{ progress_cards(progress, current_user.daily_goal) }}
-  <p class="small text-muted mb-0">Based on actual application dates (UTC). Unknown dates: {{ progress.unknown_dates }}. These count toward XP, but not daily stats. <a href="{{ url_for('community.profile', handle=current_user.handle) if current_user.handle else url_for('community.settings') }}">View milestones &amp; profile</a></p>
-</section>
-
-{% include "jobs/progress.html" %}
 
 <div class="row g-4">
   <div class="col-lg-5">
@@ -78,11 +70,23 @@
     </div>
   </div>
 </div>
-<div class="row g-4 mt-1">
+<div class="row g-4 mt-1 mb-4">
   {% for label, items, due in [('Overdue follow-ups', overdue, 'overdue'), ('Today and upcoming', upcoming, 'upcoming')] %}
   <div class="col-md-6"><section class="card h-100"><div class="card-header d-flex justify-content-between flex-wrap gap-2"><span>{{ label }}</span><a href="{{ url_for('jobs.follow_ups', due=due) }}">View queue</a></div>
     <div class="list-group list-group-flush">{% for job in items %}<a class="list-group-item list-group-item-action" href="{{ url_for('jobs.job_detail', job_id=job.id) }}">{{ job.job_title }} &middot; {{ job.company }} <span class="text-muted small">{{ job.follow_up_on }}</span></a>{% else %}<p class="text-muted p-3 mb-0">No follow-ups in this queue.</p>{% endfor %}</div>
   </section></div>
   {% endfor %}
 </div>
+
+<details class="progress-details mb-4">
+  <summary>Goals &amp; progress <span>Daily goal, XP, and personal bests</span></summary>
+  <section class="progress-hub">
+  <div class="community-header mb-3"><div><h2 class="h5 mb-0">Your progress</h2></div><a class="btn btn-outline-primary btn-sm" href="{{ url_for('community.index') }}"><i class="bi bi-people me-1" aria-hidden="true"></i>Community &amp; friends</a></div>
+  {{ progress_cards(progress, current_user.daily_goal) }}
+  <p class="small text-muted mb-0">Based on actual application dates (UTC). Unknown dates: {{ progress.unknown_dates }}. These count toward XP, but not daily stats. <a href="{{ url_for('community.profile', handle=current_user.handle) if current_user.handle else url_for('community.settings') }}">View milestones &amp; profile</a></p>
+  </section>
+</details>
+
+{% include "jobs/progress.html" %}
+
 {% endblock %}

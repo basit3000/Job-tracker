@@ -39,12 +39,16 @@
         <button type="submit" class="btn btn-outline-primary">Apply</button>
       </div>
     </div>
-    <div class="row g-2 mt-2">
+    <details class="filter-details"{% if filters.company or filters.board or filters.due %} open{% endif %}>
+      <summary>More filters{% if filters.company or filters.board or filters.due %}<span class="filter-active">Active</span>{% endif %}</summary>
+      <div class="row g-2 mt-2">
       {% for name, choices in [('company', companies), ('board', boards)] %}
       <div class="col-md-4"><label for="filter-{{ name }}" class="form-label small">{{ 'Company' if name == 'company' else 'Job source' }}</label><select id="filter-{{ name }}" class="form-select" name="{{ name }}"><option value="">{{ 'All companies' if name == 'company' else 'All sources' }}</option>{% for value in choices %}<option value="{{ value }}" {{ 'selected' if filters[name] == value }}>{{ value }}</option>{% endfor %}</select></div>
       {% endfor %}
       <div class="col-md-4"><label for="filter-due" class="form-label small">Follow-ups</label><select id="filter-due" name="due" class="form-select"><option value="">Any date</option>{% for value, label in [('overdue', 'Overdue'), ('today', 'Today'), ('upcoming', 'Today and upcoming')] %}<option value="{{ value }}" {{ 'selected' if filters.due == value }}>{{ label }}</option>{% endfor %}</select></div>
-    </div>
+      </div>
+      <button type="submit" class="btn btn-outline-primary mt-3">Apply filters</button>
+    </details>
     {% if current_search or current_status or filters.company or filters.board or filters.due %}
     <div class="mt-2">
       <a href="{{ url_for('jobs.job_list') }}" class="small text-muted"><i aria-hidden="true" class="bi bi-x-circle me-1"></i>Clear filters</a>
@@ -56,8 +60,8 @@
 {% if applications %}
   <p class="small text-muted d-md-none">Swipe the table horizontally to see dates and actions.</p>
   <div class="card">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
+    <div class="table-responsive" tabindex="0" role="region" aria-label="Applications table; scroll horizontally on small screens">
+      <table class="table table-hover align-middle mb-0 applications-table">
         <thead>
           <tr>
             <th>Role</th>
