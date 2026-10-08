@@ -123,6 +123,40 @@ their own trusted headers. [Railway ingress](https://docs.railway.com/networking
 
 ## Vercel
 
+### First deployment: connect a database
+
+If a request fails with `FUNCTION_INVOCATION_FAILED` and its traceback ends with
+`Set DATABASE_URL to a durable PostgreSQL database`, PostgreSQL has not been
+configured for that deployment. Deploying the repository does not create a
+database. Do the following before redeploying:
+
+1. Open the project's Storage tab and create/connect a PostgreSQL database
+   through the Marketplace, for example Neon. Vercel's former built-in Postgres
+   product is no longer available for new projects.
+   [Vercel Postgres setup](https://vercel.com/docs/postgres)
+2. Connect the database to this project for the Production environment. Check
+   Settings → Environment Variables for `DATABASE_URL`. If the integration uses
+   another name or a prefix, privately add `DATABASE_URL` with the provider's
+   pooled PostgreSQL connection string. Preserve the provider's TLS parameters;
+   an HTTPS API URL is not a PostgreSQL connection string.
+3. Configure the rest of the production variables in the table above, including
+   `SECRET_KEY`, `RATELIMIT_STORAGE_URI`, and private S3 resume storage. Set
+   `APP_BASE_URL=https://job-tracker-tau-woad.vercel.app` for the current domain,
+   or replace it with your custom domain. PostgreSQL alone does not satisfy the
+   app's other production requirements.
+4. Apply migrations using the release command below with the production
+   variables available privately in that terminal, then redeploy. Environment
+   changes apply only to new deployments.
+   [Vercel environment variables](https://vercel.com/docs/environment-variables)
+
+Never paste connection strings or signing keys into chat or commit them to Git.
+Use a separate database/branch and secrets for previews. The build checks Flask
+startup and reports missing configuration without echoing variable values. It
+does not provision services, apply migrations, or test their connectivity;
+`/healthz` checks database connectivity after deployment.
+
+### Deploy the application
+
 1. Provision managed PostgreSQL, shared Redis, and a private S3-compatible bucket
    reachable from Vercel. Configure the variables above in the project. Private
    `*.railway.internal` URLs cannot be used by a Vercel function; use providers'
@@ -133,9 +167,11 @@ their own trusted headers. [Railway ingress](https://docs.railway.com/networking
    `uv.lock` pins their resolved dependencies. Keep runtime pins in
    `requirements.txt` aligned when updating them, then run `uv lock` with Python
    3.12 before committing. `vercel.json` configures a 300-second
-   function duration. Enable Fluid compute and ensure your plan supports this
-   duration. The build script publishes only public static assets, preserving
-   existing `/static/...` URLs. `.vercelignore` excludes local environments,
+   function duration and explicitly runs `python ops/build_vercel.py` as its
+   build command. Enable Fluid compute and ensure your plan supports this
+   duration. The build script checks Flask startup before publishing public
+   static assets, preserving existing `/static/...` URLs. `.vercelignore`
+   excludes local environments,
    private databases, backups, uploads, and secrets from CLI uploads. Additional
    function exclusions protect the deployed bundle.
    [Native Flask deployment](https://vercel.com/docs/frameworks/backend/flask)
