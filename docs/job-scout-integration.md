@@ -1,9 +1,25 @@
-# Connecting Job Scout later
+# Connecting Job Scout
 
-The tracker API and Node reference client work now. This repository does not
-modify, read candidate stores from, or connect to an installed Job Scout app.
-The later adapter belongs in the local repository and must use an explicit
-selection/preview flow before sending records.
+The local adapter is implemented in the neighboring `job-scout` repository.
+In Job Scout open **Tracker → Connect Job Tracker**, enter this service's HTTPS
+origin, start pairing, approve the code here at `/integrations`, then finish pairing
+in Job Scout. Select applications, review the transfer preview and confirm.
+Cloud downloads populate a preview cache; selected imports apply local changes.
+Transfers are manual and never automatically enroll all application records.
+
+Job Scout's `docs/job-tracker-connection.md` covers field selection, explicit links,
+conflict choices, interrupted import recovery and local development. The adapter
+keeps credentials and recovery state in ignored `state/private/tracker.json`.
+It uses a separate validated local import path without Sheets or application actions.
+This service never reads local candidate files or initiates inbound connections.
+
+`tests/test_job_scout_adapter.py` exercises an adjacent checkout against this API
+with fictional temporary records and browser-approved pairing. Set `JOB_SCOUT_ROOT`
+for another location. It verifies lost-response retries, conflict review, local
+imports, mapping, tombstones and revocation. The test skips when the adapter checkout
+is unavailable. HTTPS/PostgreSQL deployment verification remains a separate check.
+
+The following contract notes also guide future adapter changes.
 
 ## Source compatibility
 
@@ -127,6 +143,6 @@ Job Scout storage or perform any application/AI/Sheets action.
 service, logs in and approves pairing through browser forms, simulates a lost
 acknowledgment, resolves a conflict, verifies deletion retries, and revokes access.
 `node --test reference-client/client.test.mjs` verifies projection and durable
-state independently. Before a real adapter rollout, implement and test local
-selection, import semantics, event ledgers, and crash recovery in Job Scout, then
-exercise them with fictional records against PostgreSQL and an HTTPS deployment.
+state independently. Job Scout's adapter tests additionally cover local selection,
+import semantics, event ledgers and crash recovery. Before deployment, exercise
+the integration with fictional records against PostgreSQL and HTTPS as well.
