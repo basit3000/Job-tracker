@@ -13,13 +13,14 @@ from flask import (
 )
 from flask_login import current_user, login_required
 
-from app.contracts import ServiceError, expected_version
+from app.contracts import ServiceError, form_version
 from app.forms import JobApplicationForm
 from app.models import JOB_STATUSES, JobApplication
 from app.services import (
     DEFAULT_SORT,
     JOB_FIELDS,
     SORT_OPTIONS,
+    application_filter_choices,
     application_query,
     dashboard_summary,
     delete_application,
@@ -43,12 +44,9 @@ def _job_form_response(job, *, title, success_message):
     if form.validate_on_submit():
         data = {name: form[name].data for name in JOB_FIELDS}
         try:
-            raw_version = request.form.get("version", "")
             version = (
-                int(raw_version)
-                if raw_version.isascii()
-                and raw_version.isdigit()
-                and len(raw_version) <= 10
+                form_version(request.form.get("version"))
+                if job.id is not None
                 else None
             )
             save_application(
@@ -72,7 +70,8 @@ def _job_form_response(job, *, title, success_message):
 @login_required
 def dashboard():
     return render_template(
-        "jobs/dashboard.html", **dashboard_summary(current_user.id)
+        "jobs/dashboard.html",
+        **dashboard_summary(current_user.id),
     )
 
 
@@ -99,25 +98,12 @@ def job_list():
         per_page=25,
         error_out=False,
     )
-    choices = JobApplication.for_user(current_user.id)
     return render_template(
         "jobs/list.html",
         applications=pagination.items,
         pagination=pagination,
         filters=filters,
-        companies=[
-            row[0]
-            for row in choices.with_entities(JobApplication.company)
-            .distinct()
-            .order_by(JobApplication.company)
-        ],
-        boards=[
-            row[0]
-            for row in choices.with_entities(JobApplication.board)
-            .filter(JobApplication.board.isnot(None))
-            .distinct()
-            .order_by(JobApplication.board)
-        ],
+        **application_filter_choices(current_user.id),
         statuses=JOB_STATUSES,
         sort_options=SORT_OPTIONS,
         current_search=search,
@@ -156,15 +142,7 @@ def edit_job(job_id):
 @login_required
 def delete_job(job_id):
     job = _get_job_or_404(job_id)
-    raw_version = request.form.get("version", "")
-    version = (
-        int(raw_version)
-        if raw_version.isascii()
-        and raw_version.isdigit()
-        and len(raw_version) <= 10
-        else None
-    )
-    delete_application(job, version=expected_version(version))
+    delete_application(job, version=form_version(request.form.get("version")))
     flash("Job application deleted.", "success")
     return redirect(url_for("jobs.job_list"))
 

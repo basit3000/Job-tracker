@@ -208,3 +208,22 @@ def test_job_crud_resume_search_and_filters(logged_client, app, job):
         == 302
     )
     assert not Path(app.config["UPLOAD_FOLDER"], filename).exists()
+
+
+@pytest.mark.parametrize("version", ["", "0", "-1", "1.5", "١", "2147483648"])
+@pytest.mark.parametrize("action", ["edit", "delete"])
+def test_invalid_browser_version_does_not_change_application(
+    logged_client, app, job, version, action
+):
+    token = csrf_token(logged_client, f"/jobs/{job}/edit")
+    response = logged_client.post(
+        f"/jobs/{job}/{action}",
+        data=job_data(csrf_token=token, version=version),
+    )
+    # WTForms can reject malformed text before contract validation runs.
+    assert response.status_code in {200, 422}
+    with app.app_context():
+        record = db.session.get(JobApplication, job)
+        assert record.company == "Example"
+        assert record.version == 1 and record.deleted_at is None
+    assert Path(app.config["UPLOAD_FOLDER"], "existing.pdf").exists()

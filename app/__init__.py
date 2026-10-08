@@ -22,7 +22,17 @@ from app.uploads import resume_upload_help
 def create_app(config_object="config.Config"):
     app = Flask(__name__, template_folder="templates")
     app.config.from_object(config_object)
+    _configure_storage(app)
+    _initialize_extensions(app)
+    _register_blueprints(app)
+    _configure_templates(app)
+    register_cli(app)
+    register_error_handlers(app)
+    register_security_headers(app)
+    return app
 
+
+def _configure_storage(app):
     secret_key = app.config.get("SECRET_KEY")
     if not isinstance(secret_key, (str, bytes)) or len(secret_key) < 32:
         raise ValueError(
@@ -33,6 +43,8 @@ def create_app(config_object="config.Config"):
     app.config["UPLOAD_FOLDER"] = os.path.abspath(app.config["UPLOAD_FOLDER"])
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
+
+def _initialize_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)
@@ -44,35 +56,42 @@ def create_app(config_object="config.Config"):
     login_manager.login_message = "Please log in to access that page."
     login_manager.login_message_category = "warning"
 
+    from app.models import User
+
+    login_manager.user_loader(User.from_session_id)
+
+
+def _register_blueprints(app):
     from app.exports import exports
-    from app.models import User, status_slug
     from app.routes.api import api
-    from app.routes.auth import auth, main
+    from app.routes.auth import auth
     from app.routes.google_auth import google_auth
     from app.routes.imports import imports
     from app.routes.integrations import integrations
     from app.routes.jobs import jobs
+    from app.routes.main import main
     from app.routes.sources import sources
 
-    login_manager.user_loader(User.from_session_id)
-    app.jinja_env.filters["status_slug"] = status_slug
+    for blueprint in (
+        auth,
+        google_auth,
+        main,
+        jobs,
+        api,
+        integrations,
+        exports,
+        imports,
+        sources,
+    ):
+        app.register_blueprint(blueprint)
+
+
+def _configure_templates(app):
     from app.contracts import iso
+    from app.models import status_slug
 
-    app.jinja_env.filters["utc_timestamp"] = iso
+    app.jinja_env.filters.update(status_slug=status_slug, utc_timestamp=iso)
     app.jinja_env.globals["pagination_url"] = pagination_url
-    app.register_blueprint(auth)
-    app.register_blueprint(google_auth)
-    app.register_blueprint(main)
-    app.register_blueprint(jobs)
-    app.register_blueprint(api)
-    app.register_blueprint(integrations)
-    app.register_blueprint(exports)
-    app.register_blueprint(imports)
-    app.register_blueprint(sources)
-    register_cli(app)
-
-    register_error_handlers(app)
-    register_security_headers(app)
 
     @app.context_processor
     def inject_globals():
@@ -81,8 +100,6 @@ def create_app(config_object="config.Config"):
             "resume_upload_help": resume_upload_help(),
             "pagination_url": pagination_url,
         }
-
-    return app
 
 
 def pagination_url(page):

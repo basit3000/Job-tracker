@@ -1,8 +1,5 @@
 """HTTP import workflow: choose a source, map, review, then confirm."""
 
-import csv
-import io
-
 from flask import (
     Blueprint,
     Response,
@@ -18,7 +15,6 @@ from flask_login import current_user, login_required
 
 from app.contracts import ServiceError
 from app.database import database_transaction
-from app.exports import csv_cell
 from app.extensions import db, limiter
 from app.forms import GoogleLoginForm
 from app.google_login import (
@@ -35,6 +31,7 @@ from app.import_mapping import (
     suggested_status,
 )
 from app.import_readers import MAX_BYTES, import_error, read_file
+from app.import_reports import review_csv
 from app.import_service import (
     cleanup_imports,
     commit_batch,
@@ -238,43 +235,8 @@ def report(batch_id):
     batch = get_batch(current_user.id, batch_id)
     if not batch.options:
         abort(404)
-    rows, _ = preview(batch, batch.options)
-    output = io.StringIO(newline="")
-    writer = csv.writer(output)
-    labels, _ = layout(
-        batch.payload[batch.options["sheet"]], batch.options["header"]
-    )
-    writer.writerow(
-        [
-            "Source row",
-            "Decision",
-            "Issue",
-            *FIELD_LABELS.values(),
-            *[csv_cell("Original: " + label) for label in labels],
-        ]
-    )
-    for row in rows:
-        writer.writerow(
-            [
-                row["number"],
-                row["decision"],
-                csv_cell(
-                    row["error"]
-                    or (
-                        "Local edits preserved: " + ", ".join(row["conflicts"])
-                        if row.get("conflicts")
-                        else ""
-                    )
-                ),
-                *[
-                    csv_cell(row["fields"].get(name, ""))
-                    for name in FIELD_LABELS
-                ],
-                *[csv_cell(value) for value in row["source"]],
-            ]
-        )
     return Response(
-        output.getvalue(),
+        review_csv(batch),
         mimetype="text/csv",
         headers={
             "Content-Disposition": 'attachment; filename="import-review.csv"'

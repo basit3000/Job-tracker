@@ -114,6 +114,24 @@ def list_applications(user_id, **filters):
     return application_query(user_id, **filters).all()
 
 
+def application_filter_choices(user_id):
+    """Build filter menus using only the account's active applications."""
+    query = JobApplication.for_user(user_id)
+    return {
+        name: [
+            row[0]
+            for row in query.with_entities(column)
+            .filter(column.isnot(None))
+            .distinct()
+            .order_by(column)
+        ]
+        for name, column in (
+            ("companies", JobApplication.company),
+            ("boards", JobApplication.board),
+        )
+    }
+
+
 def filter_follow_ups(query, due):
     today = datetime.now(timezone.utc).date()
     if due == "overdue":

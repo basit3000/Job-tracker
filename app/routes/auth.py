@@ -1,3 +1,5 @@
+"""Password registration, sign-in, and session lifecycle views."""
+
 from flask import (
     Blueprint,
     abort,
@@ -22,7 +24,6 @@ from app.security import AUTH_RATE_LIMIT
 from app.utils import is_safe_redirect
 
 auth = Blueprint("auth", __name__)
-main = Blueprint("main", __name__)
 
 
 @auth.before_request
@@ -32,13 +33,6 @@ def redirect_authenticated_users():
         and current_user.is_authenticated
     ):
         return redirect(url_for("jobs.dashboard"))
-
-
-@main.route("/")
-def home():
-    if current_user.is_authenticated:
-        return redirect(url_for("jobs.dashboard"))
-    return render_template("home.html")
 
 
 @auth.route("/register", methods=["GET", "POST"])

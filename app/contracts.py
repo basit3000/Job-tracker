@@ -209,6 +209,19 @@ def expected_version(value):
     return value
 
 
+def form_version(value):
+    """Apply the same version bounds to browser text and JSON integers."""
+    parsed = (
+        int(value)
+        if isinstance(value, str)
+        and value.isascii()
+        and value.isdigit()
+        and len(value) <= 10
+        else None
+    )
+    return expected_version(parsed)
+
+
 def validate_history(events):
     if not isinstance(events, list) or len(events) > 100:
         invalid("statusHistory must contain at most 100 source events.")
