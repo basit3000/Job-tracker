@@ -60,3 +60,7 @@ upload/
 *.log.*
 
 AGENTS.md
+
+.vercel/
+.railway/
+public/

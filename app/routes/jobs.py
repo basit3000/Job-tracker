@@ -3,12 +3,10 @@
 from flask import (
     Blueprint,
     abort,
-    current_app,
     flash,
     redirect,
     render_template,
     request,
-    send_from_directory,
     url_for,
 )
 from flask_login import current_user, login_required
@@ -27,7 +25,7 @@ from app.services import (
     delete_application,
     save_application,
 )
-from app.uploads import resume_path
+from app.uploads import download_resume as resume_response
 
 jobs = Blueprint("jobs", __name__)
 
@@ -200,10 +198,4 @@ def follow_ups():
 @login_required
 def download_resume(job_id):
     job = _get_job_or_404(job_id)
-    if resume_path(job.resume_filename) is None:
-        abort(404)
-    return send_from_directory(
-        current_app.config["UPLOAD_FOLDER"],
-        job.resume_filename,
-        as_attachment=True,
-    )
+    return resume_response(job.resume_filename)

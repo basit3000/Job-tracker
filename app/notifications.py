@@ -158,10 +158,12 @@ def _claim(user_id, day, zone):
     return delivery
 
 
-def run_due_reminders(now=None):
+def run_due_reminders(now=None, *, limit=None):
     result = {"sent": 0, "failed": 0, "skipped": 0}
     if not mail_ready():
         return result
+    if limit is not None and limit < 1:
+        raise ValueError("The reminder attempt limit must be positive.")
     if now is not None and now.tzinfo is None:
         raise ValueError("The reminder clock must be timezone aware.")
     ids = db.session.scalars(
@@ -189,6 +191,8 @@ def run_due_reminders(now=None):
             continue
         status = _deliver_claimed_reminder(preference, delivery, now)
         result[status] += 1
+        if limit is not None and sum(result.values()) >= limit:
+            break
     return result
 
 

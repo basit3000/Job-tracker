@@ -3,7 +3,19 @@
 from pathlib import Path
 from uuid import uuid4
 
-from flask import current_app
+from flask import abort, current_app, send_from_directory
+
+
+def valid_resume_name(filename):
+    # Names are opaque basenames, never S3 prefixes or response headers.
+    return bool(
+        filename
+        and filename not in {".", ".."}
+        and all(
+            character.isascii() and (character.isalnum() or character in "._-")
+            for character in filename
+        )
+    )
 
 
 def upload_size_label():
@@ -28,7 +40,7 @@ def resume_upload_help():
 
 def resume_path(filename):
     """Confine stored names and symlinks to the upload directory."""
-    if not filename or "\\" in filename or Path(filename).name != filename:
+    if not valid_resume_name(filename):
         return None
     try:
         root = Path(current_app.config["UPLOAD_FOLDER"]).resolve()
@@ -40,6 +52,12 @@ def resume_path(filename):
 
 def delete_resume(filename):
     if not filename:
+        return
+    if current_app.config["UPLOAD_STORAGE"] == "s3":
+        from app.object_storage import delete_object
+
+        if valid_resume_name(filename):
+            delete_object(filename)
         return
     path = resume_path(filename)
     if path is None:
@@ -60,6 +78,11 @@ def save_resume(file_storage):
     if extension not in current_app.config["ALLOWED_UPLOAD_EXTENSIONS"]:
         raise ValueError("Unsupported resume extension.")
     name = f"{uuid4().hex}.{extension}"
+    if current_app.config["UPLOAD_STORAGE"] == "s3":
+        from app.object_storage import save_object
+
+        save_object(name, file_storage.stream)
+        return name
     path = resume_path(name)
     if path is None:
         raise ValueError("Invalid resume storage path.")
@@ -73,3 +96,19 @@ def save_resume(file_storage):
             delete_resume(name)
         raise
     return name
+
+
+def download_resume(filename):
+    if not valid_resume_name(filename):
+        abort(404)
+    if current_app.config["UPLOAD_STORAGE"] == "s3":
+        from app.object_storage import download_object
+
+        return download_object(filename)
+    if resume_path(filename) is None:
+        abort(404)
+    return send_from_directory(
+        current_app.config["UPLOAD_FOLDER"],
+        filename,
+        as_attachment=True,
+    )

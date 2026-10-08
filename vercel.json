@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "flask",
+  "buildCommand": "python ops/build_vercel.py",
+  "functions": {
+    "wsgi.py": {
+      "maxDuration": 300,
+      "excludeFiles": "{tests/**,docs/**,examples/**,public/**,.env,.env.*,uploads/**,upload/**,instance/**,data/**,backups/**,database_backups/**,private/**,secrets/**,credentials/**,**/*.db,**/*.sqlite*,**/*.sql,**/*.dump,**/*.pem,**/*.key,**/*.log,**/*.bak}"
+    }
+  },
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {"key": "X-Content-Type-Options", "value": "nosniff"},
+        {"key": "Referrer-Policy", "value": "no-referrer"}
+      ]
+    }
+  ],
+  "crons": [{"path": "/internal/cron/cleanup", "schedule": "0 3 * * *"}]
+}

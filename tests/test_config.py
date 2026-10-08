@@ -61,3 +61,38 @@ def test_explicit_database_drivers_are_preserved(url):
 def test_environment_boolean_conventions(monkeypatch, value, expected):
     monkeypatch.setenv("TEST_BOOL", value)
     assert env_bool("TEST_BOOL") is expected
+
+
+@pytest.mark.parametrize("platform", ["vercel", "railway"])
+def test_platform_defaults_use_secure_cookies_and_request_limits(platform):
+    environment = os.environ.copy()
+    for key in (
+        "VERCEL",
+        "RAILWAY_ENVIRONMENT_ID",
+        "SESSION_COOKIE_SECURE",
+        "PROXY_PROTO_COUNT",
+        "APP_BASE_URL",
+        "GOOGLE_REDIRECT_URI",
+    ):
+        environment.pop(key, None)
+    environment[
+        "VERCEL" if platform == "vercel" else "RAILWAY_ENVIRONMENT_ID"
+    ] = "1"
+    environment["APP_BASE_URL"] = "https://tracker.example.com"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from config import Config as C; "
+            "assert C.PRODUCTION and C.SESSION_COOKIE_SECURE; "
+            "assert C.REMEMBER_COOKIE_SECURE; "
+            "assert C.GOOGLE_REDIRECT_URI == "
+            "'https://tracker.example.com/auth/google/callback'; "
+            "print(C.MAX_CONTENT_LENGTH)",
+        ],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert int(result.stdout) == (4 if platform == "vercel" else 5) * 1024**2

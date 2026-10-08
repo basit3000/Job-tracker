@@ -3,17 +3,18 @@ from urllib.parse import urlsplit
 
 from authlib.integrations.flask_client import OAuth
 from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 
+from app.deployment import DeploymentConfigurationError, client_address
+
 db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
 csrf = CSRFProtect()
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=client_address)
 
 
 def init_google_oauth(app):
@@ -23,7 +24,9 @@ def init_google_oauth(app):
         app.config.get("GOOGLE_CLIENT_SECRET"),
     )
     if any(credentials) and not all(credentials):
-        raise ValueError("Set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.")
+        raise DeploymentConfigurationError(
+            "Set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET."
+        )
     app.config["GOOGLE_LOGIN_ENABLED"] = all(credentials)
     registry = OAuth(app)
     if not all(credentials):
@@ -44,7 +47,7 @@ def init_google_oauth(app):
         or callback.fragment
         or callback.path != "/auth/google/callback"
     ):
-        raise ValueError(
+        raise DeploymentConfigurationError(
             "GOOGLE_REDIRECT_URI must be an HTTPS callback URL "
             "(HTTP is permitted only on loopback for development)."
         )

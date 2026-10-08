@@ -1,5 +1,7 @@
 # Setup deployment and recovery
 
+For managed hosting, follow [Railway and Vercel deployment](cloud-deployment.md).
+
 The tracker is a Flask application served by Gunicorn, with PostgreSQL persistence
 and Redis rate limits in Compose. A local Job Scout process is not required.
 No resources are provisioned by this repository. The configured Compose port is
@@ -69,7 +71,8 @@ The migrator owns the public schema. PUBLIC schema access is revoked; runtime
 receives schema usage. The administrative credential remains only in the database
 service's environment and is never distributed to browsers or device clients.
 
-`ops/serve.py` applies migrations using `MIGRATION_DATABASE_URL`, grants explicit
+`ops/serve.py` applies migrations through `ops/migrate.py` using
+`MIGRATION_DATABASE_URL`. Compose enables `GRANT_RUNTIME_ROLE=true` to grant explicit
 application-table permissions with `flask grant-runtime`, removes the migration
 URI from the worker environment, and starts Gunicorn with `DATABASE_URL` pointing
 to `tracker_runtime`. The runtime cannot alter the schema or Alembic version table.
