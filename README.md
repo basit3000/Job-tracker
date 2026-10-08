@@ -1,5 +1,10 @@
 # Job Tracker
 
+Ready-to-configure hosting for Railway, Vercel, and Docker-based providers is
+documented in [cloud deployment](docs/cloud-deployment.md). Railway supports
+continuous workers; Vercel uses managed PostgreSQL, Redis, private object storage,
+and external scheduling for frequent syncs/reminders.
+
 The Overview includes a 28-day application chart, a 12-week consistency calendar, current/longest streaks, XP, goals, and milestone badges. Optional daily email nudges are available in **Account → Notifications**. See [email reminder setup](docs/notifications.md) for SMTP configuration and the background worker. Email delivery defaults to off.
 
 A Flask application for tracking private application records online, independently of
