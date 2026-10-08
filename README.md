@@ -52,6 +52,17 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
+On Windows, a `DLL load failed while importing _psycopg` error can come from
+an older driver built locally without its required DLLs. Python 3.14 requires
+psycopg2 2.9.11 or newer; this project pins a compatible version. After updating
+the repository, reinstall the prebuilt driver wheel in the affected environment
+(replace `venv` with `.venv` if that is your environment's name):
+
+```powershell
+venv\Scripts\python.exe -m pip install --force-reinstall --no-cache-dir --only-binary=:all: psycopg2-binary==2.9.13
+venv\Scripts\python.exe -c "import psycopg2; print(psycopg2.__version__)"
+```
+
 Set a private, stable `SECRET_KEY` in `.env`, using a generated value:
 
 ```powershell
