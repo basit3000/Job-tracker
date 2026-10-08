@@ -44,7 +44,7 @@ def test_page_assets_stay_on_the_tracker_origin(app, users, job):
             page.get_by_label("Email", exact=True).fill("owner@example.com")
             page.get_by_label("Password", exact=True).fill("correct-password")
             page.get_by_role("button", name="Log in", exact=True).click()
-            expect(page).to_have_url(origin + "/dashboard")
+            expect(page).to_have_url(origin + "/")
             for path in ("/dashboard", "/community", f"/jobs/{job}"):
                 page.goto(origin + path)
                 page.evaluate("document.fonts.ready")

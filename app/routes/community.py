@@ -130,6 +130,8 @@ def add_friend(handle):
         "Friend request sent. Sharing access starts after they accept.",
         "success",
     )
+    if request.form.get("return_to") == "home":
+        return redirect(url_for("main.home"))
     return redirect(url_for("community.profile", handle=person.handle))
 
 
@@ -145,7 +147,12 @@ def manage_friendship(friendship_id, action):
         "remove": "Friend removed. Private profile access has ended.",
     }
     flash(messages[action], "success")
-    return redirect(url_for("community.index"))
+    endpoint = (
+        "main.home"
+        if request.form.get("return_to") == "home"
+        else "community.index"
+    )
+    return redirect(url_for(endpoint))
 
 
 @community.route("/u/<handle>/jobs/<uuid:public_id>/save", methods=["POST"])

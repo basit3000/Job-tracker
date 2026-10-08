@@ -5,7 +5,12 @@ documented in [cloud deployment](docs/cloud-deployment.md). Railway supports
 continuous workers; Vercel uses managed PostgreSQL, Redis, private object storage,
 and external scheduling for frequent syncs/reminders.
 
-The Overview includes a 28-day application chart, a 12-week consistency calendar, current/longest streaks, XP, goals, and milestone badges. Optional daily email nudges are available in **Account → Notifications**. See [email reminder setup](docs/notifications.md) for SMTP configuration and the background worker. Email delivery defaults to off.
+Home brings together a community feed, a brief personal progress summary, friend
+requests, and next steps. **My tracker → Insights** includes a 28-day application
+chart, a 12-week consistency calendar, current/longest streaks, XP, goals, and
+milestone badges. Optional daily email nudges are available in
+**Account → Notifications**. See [email reminder setup](docs/notifications.md)
+for SMTP configuration and the background worker. Email delivery defaults to off.
 
 A Flask application for tracking private application records online, independently of
 whether a local Job Scout process is running. It extends this repository's app
@@ -156,14 +161,16 @@ steps, local testing, HTTPS deployment, and connecting an existing account.
 
 ## Community and progress
 
-The header keeps **Overview**, **Applications**, **Follow-ups**, and **Community**
-visible. Switch between list and status board inside Applications. Use **Data
-tools** for imports, exports, and connections; use **Account** for profile/privacy,
+The header keeps **Home**, **My tracker**, and **People** visible. Home is the
+default destination after sign-in; explicit links to other pages still work.
+Inside My tracker, switch between **Applications**, **Status board**, **Insights**,
+and **Follow-ups**. Use **Data tools** for imports, exports, and connections;
+use **Account** for profile/privacy,
 sign-in settings, and logout. **Add application** is always available in the header.
 On phones, **Menu** opens data tools and account settings while the main sections
 remain visible.
 
-Open **Community** in the header. Choose a username
+Open **People** in the header. Choose a username
 in **Account → Profile & privacy**, set a goal, and decide who can see your profile.
 Existing and new accounts default to private with job sharing off. Public means
 visible to signed-in community members. Private profiles show their identity for
@@ -175,12 +182,31 @@ applications, best day, or current streak. Either friend can remove the connecti
 to end private-profile access. A public profile remains visible to signed-in
 members until its owner switches it to private.
 
-**Share my applied jobs on my profile** is a separate opt-in. Shared lists show
+**Share my applied jobs on my profile** is a separate opt-in. Shared lists and
+the home feed show
 only company, role, posting link, status, and application date. Notes, resumes,
 salary, contact details, follow-ups, and connected-source credentials remain
 private. Viewers can open the posting or save a job to their own shortlist; this
 creates a new private record without copying application dates or private fields.
 It does not submit an application to the employer.
+
+The home feed has **Discover** (public profiles and accepted friends), **Friends**,
+and **Career wins** (shared interviewing, offer, and accepted applications).
+Search by role, company, or public name/username. Results use application-date
+order, with unknown dates last and ten items per page. The feed uses the same
+permissions and limited field projection as shared profiles; sharing changes,
+removed friendships, and deleted records take effect on the next request.
+Private edits never become feed timestamps. No new sharing defaults or schema
+migrations are introduced by the social home.
+
+The UI includes visible keyboard focus, labeled controls and errors, reduced
+motion support, larger touch targets, higher-contrast status badges, and mobile
+shortcuts to requests and next steps. Browser coverage checks 320, 390, 768, and
+1440 pixel home layouts. To also run an automated WCAG A/AA audit, set
+`AXE_CORE_SCRIPT` to a local axe-core JavaScript bundle while running
+`RUN_BROWSER_TESTS=1 pytest tests/test_social_home_browser.py`. The app loads no
+external accessibility script at runtime. Automated checks are not a complete
+accessibility conformance assessment.
 
 Daily stats use recorded `applied_on` dates and the UTC calendar, never creation
 timestamps. Submitted statuses are applied, interviewing, offer, accepted, and

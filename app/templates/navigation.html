@@ -1,6 +1,6 @@
 {% from "macros/navigation.html" import nav_link, tool_link with context %}
 {% from "macros/forms.html" import csrf_field %}
-{% set application_section = request.blueprint == 'jobs' and request.endpoint not in ['jobs.dashboard', 'jobs.follow_ups'] %}
+{% set application_section = request.blueprint == 'jobs' %}
 {% set data_section = request.blueprint in ['imports', 'exports', 'sources', 'integrations'] %}
 <a class="skip-link" href="#main-content">Skip to content</a>
 <header class="app-header">
@@ -57,10 +57,9 @@
   </div>
   {% if current_user.is_authenticated %}
     <div class="workspace-navigation"><nav class="container workspace-links" aria-label="Main navigation">
-      {{ nav_link('Overview', 'jobs.dashboard', 'grid-1x2', request.endpoint == 'jobs.dashboard') }}
-      {{ nav_link('Applications', 'jobs.job_list', 'collection', application_section) }}
-      {{ nav_link('Follow-ups', 'jobs.follow_ups', 'calendar-check', request.endpoint == 'jobs.follow_ups') }}
-      {{ nav_link('Community', 'community.index', 'people', request.blueprint == 'community') }}
+      {{ nav_link('Home', 'main.home', 'house-door', request.endpoint == 'main.home') }}
+      {{ nav_link('My tracker', 'jobs.job_list', 'collection', application_section) }}
+      {{ nav_link('People', 'community.index', 'people', request.blueprint == 'community') }}
     </nav></div>
   {% endif %}
 </header>

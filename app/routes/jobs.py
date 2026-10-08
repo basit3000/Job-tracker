@@ -177,7 +177,7 @@ def status_board():
 @login_required
 def follow_ups():
     due = request.args.get("due", "overdue")
-    if due not in {"overdue", "today", "upcoming"}:
+    if due not in {"due", "overdue", "today", "upcoming"}:
         abort(404)
     pagination = (
         application_query(current_user.id, due=due, sort="oldest")

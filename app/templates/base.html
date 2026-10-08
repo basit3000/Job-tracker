@@ -11,6 +11,7 @@
   >
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/social.css') }}">
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -25,18 +26,19 @@
         {% for category, message in messages %}
           <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss notification"></button>
           </div>
         {% endfor %}
         </div>
       {% endif %}
     {% endwith %}
 
-    {% if current_user.is_authenticated and request.blueprint == 'jobs' and request.endpoint not in ['jobs.dashboard', 'jobs.follow_ups', 'jobs.add_job', 'jobs.edit_job', 'jobs.job_detail'] %}
+    {% if current_user.is_authenticated and request.blueprint == 'jobs' %}
     <nav class="application-views" aria-label="Application views">
-      <span>View</span>
-      <a href="{{ url_for('jobs.job_list') }}" class="{{ 'is-active' if request.endpoint == 'jobs.job_list' }}"{% if request.endpoint == 'jobs.job_list' %} aria-current="page"{% endif %}><i class="bi bi-list-ul" aria-hidden="true"></i>List</a>
+      <a href="{{ url_for('jobs.job_list') }}" class="{{ 'is-active' if request.endpoint == 'jobs.job_list' }}"{% if request.endpoint == 'jobs.job_list' %} aria-current="page"{% endif %}><i class="bi bi-list-ul" aria-hidden="true"></i>Applications</a>
       <a href="{{ url_for('jobs.status_board') }}" class="{{ 'is-active' if request.endpoint == 'jobs.status_board' }}"{% if request.endpoint == 'jobs.status_board' %} aria-current="page"{% endif %}><i class="bi bi-kanban" aria-hidden="true"></i>Status board</a>
+      <a href="{{ url_for('jobs.dashboard') }}" class="{{ 'is-active' if request.endpoint == 'jobs.dashboard' }}"{% if request.endpoint == 'jobs.dashboard' %} aria-current="page"{% endif %}><i class="bi bi-bar-chart" aria-hidden="true"></i>Insights</a>
+      <a href="{{ url_for('jobs.follow_ups') }}" class="{{ 'is-active' if request.endpoint == 'jobs.follow_ups' }}"{% if request.endpoint == 'jobs.follow_ups' %} aria-current="page"{% endif %}><i class="bi bi-calendar-check" aria-hidden="true"></i>Follow-ups</a>
     </nav>
     {% endif %}
     {% block content %}{% endblock %}

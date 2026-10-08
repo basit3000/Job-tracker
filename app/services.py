@@ -104,7 +104,7 @@ def application_query(
         query = query.filter_by(company=company)
     if board:
         query = query.filter_by(board=board)
-    if due in {"overdue", "today", "upcoming"}:
+    if due in {"due", "overdue", "today", "upcoming"}:
         query = filter_follow_ups(query, due)
     ordering = SORT_OPTIONS.get(sort, SORT_OPTIONS[DEFAULT_SORT])[1]
     return query.order_by(ordering, JobApplication.id.desc())
@@ -134,6 +134,8 @@ def application_filter_choices(user_id):
 
 def filter_follow_ups(query, due):
     today = datetime.now(timezone.utc).date()
+    if due == "due":
+        return query.filter(JobApplication.follow_up_on <= today)
     if due == "overdue":
         return query.filter(JobApplication.follow_up_on < today)
     if due == "today":

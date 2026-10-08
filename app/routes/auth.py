@@ -32,7 +32,7 @@ def redirect_authenticated_users():
         request.endpoint in {"auth.login", "auth.register"}
         and current_user.is_authenticated
     ):
-        return redirect(url_for("jobs.dashboard"))
+        return redirect(url_for("main.home"))
 
 
 @auth.route("/register", methods=["GET", "POST"])
@@ -87,7 +87,5 @@ def finish_login(user, next_page=None, *, message="Welcome back!"):
     session.clear()
     login_user(user)
     flash(message, "success")
-    target = (
-        next_page if is_safe_redirect(next_page) else url_for("jobs.dashboard")
-    )
+    target = next_page if is_safe_redirect(next_page) else url_for("main.home")
     return redirect(target)

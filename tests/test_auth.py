@@ -9,7 +9,7 @@ from tests.helpers import csrf_token
 
 @pytest.mark.parametrize("path", ["/login", "/register"])
 def test_authenticated_users_skip_account_forms(logged_client, path):
-    assert logged_client.get(path).location == "/dashboard"
+    assert logged_client.get(path).location == "/"
 
 
 @pytest.mark.parametrize(
@@ -40,7 +40,7 @@ def test_login_blocks_browser_normalized_redirect(client, users):
         },
     )
     assert response.status_code == 302
-    assert response.location == "/dashboard"
+    assert response.location == "/"
 
 
 def test_login_redirect_and_session_rotation(client, users):

@@ -1,9 +1,11 @@
 {% macro field(f, placeholder="", control_class="form-control") -%}
 <div class="mb-3">
   {{ f.label(class="form-label") }}
-  {{ f(class=control_class + (" is-invalid" if f.errors else ""), placeholder=placeholder, **kwargs) }}
-  {% for error in f.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
-  {% if caller is defined %}{{ caller() }}{% endif %}
+  {{ f(class=control_class + (" is-invalid" if f.errors else ""), placeholder=placeholder, aria_invalid='true' if f.errors else 'false', aria_describedby=f.id ~ '-help', **kwargs) }}
+  <div id="{{ f.id }}-help">
+    {% for error in f.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+    {% if caller is defined %}{{ caller() }}{% endif %}
+  </div>
 </div>
 {%- endmacro %}
 

@@ -41,15 +41,14 @@ def test_responsive_navigation_and_keyboard_controls(app, users, width):
             page.get_by_role("button", name="Log in", exact=True).click()
             nav = page.get_by_role("navigation", name="Main navigation")
             for name in (
-                "Overview",
-                "Applications",
-                "Follow-ups",
-                "Community",
+                "Home",
+                "My tracker",
+                "People",
             ):
                 expect(
                     nav.get_by_role("link", name=name, exact=True)
                 ).to_be_visible()
-            expect(nav.get_by_role("link", name="Overview")).to_have_attribute(
+            expect(nav.get_by_role("link", name="Home")).to_have_attribute(
                 "aria-current", "page"
             )
             expect(
@@ -66,19 +65,19 @@ def test_responsive_navigation_and_keyboard_controls(app, users, width):
                 "document.documentElement.scrollWidth <= window.innerWidth"
             )
 
-            nav.get_by_role("link", name="Applications", exact=True).click()
+            nav.get_by_role("link", name="My tracker", exact=True).click()
             views = page.get_by_role("navigation", name="Application views")
             views.get_by_role("link", name="Status board", exact=True).click()
             expect(
-                nav.get_by_role("link", name="Applications")
+                nav.get_by_role("link", name="My tracker")
             ).to_have_attribute("aria-current", "true")
             expect(
                 views.get_by_role("link", name="Status board")
             ).to_have_attribute("aria-current", "page")
-            views.get_by_role("link", name="List", exact=True).click()
-            expect(views.get_by_role("link", name="List")).to_have_attribute(
-                "aria-current", "page"
-            )
+            views.get_by_role("link", name="Applications", exact=True).click()
+            expect(
+                views.get_by_role("link", name="Applications")
+            ).to_have_attribute("aria-current", "page")
 
             if width < 768:
                 menu = page.get_by_role("button", name="Menu", exact=True)
@@ -118,9 +117,17 @@ def test_responsive_navigation_and_keyboard_controls(app, users, width):
                 page.get_by_role(
                     "button", name="Data tools", exact=True
                 ).click()
+                expect(page.locator("#dataToolsToggle")).to_have_attribute(
+                    "aria-expanded", "true"
+                )
+                expect(
+                    page.get_by_role(
+                        "link", name="Export applications", exact=False
+                    )
+                ).to_be_visible()
                 page.screenshot(
                     path=str(artifacts / f"navigation-menu-{width}.png"),
-                    full_page=True,
+                    full_page=False,
                 )
             expect(
                 page.locator('.header-menu a[href="/imports"]')

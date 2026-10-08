@@ -55,7 +55,7 @@ def test_main_browser_flows(app, users, tmp_path, viewport):
             page.get_by_label("Email", exact=True).fill("owner@example.com")
             page.get_by_label("Password", exact=True).fill("correct-password")
             page.get_by_role("button", name="Log in", exact=True).click()
-            expect(page).to_have_url(origin + "/dashboard")
+            expect(page).to_have_url(origin + "/")
             page.get_by_role(
                 "link", name="Add application", exact=True
             ).click()
@@ -102,7 +102,7 @@ def test_main_browser_flows(app, users, tmp_path, viewport):
                 page.get_by_text("Applied → Interviewing", exact=False)
             ).to_be_visible()
             for path, heading in (
-                ("/dashboard", "Overview"),
+                ("/dashboard", "My insights"),
                 ("/jobs", "Applications"),
                 ("/board", "Status board"),
                 ("/follow-ups?due=upcoming", "Follow-ups"),
@@ -167,9 +167,7 @@ def test_public_registration_and_google_browser_flows(
     from playwright.sync_api import expect, sync_playwright
 
     provider = mock_google_transport(monkeypatch)
-    app = app_factory(
-        **GOOGLE_CONFIG, SESSION_COOKIE_SECURE=scheme == "https"
-    )
+    app = app_factory(**GOOGLE_CONFIG, SESSION_COOKIE_SECURE=scheme == "https")
     server = make_server(
         "127.0.0.1",
         0,
@@ -261,7 +259,7 @@ def test_public_registration_and_google_browser_flows(
                 "fictional-password"
             )
             page.get_by_role("button", name="Log in", exact=True).click()
-            expect(page).to_have_url(origin + "/dashboard")
+            expect(page).to_have_url(origin + "/")
             page.goto(origin + "/account")
             page.get_by_label("Current password", exact=True).fill(
                 "fictional-password"
@@ -275,14 +273,14 @@ def test_public_registration_and_google_browser_flows(
             expect(page).to_have_url(origin + "/account")
             logout()
             page.get_by_role("button", name="Continue with Google").click()
-            expect(page).to_have_url(origin + "/dashboard")
+            expect(page).to_have_url(origin + "/")
             logout()
             identity.update(
                 email="google-only@example.com", sub="google-only-id"
             )
             page.get_by_role("link", name="Create one", exact=True).click()
             page.get_by_role("button", name="Continue with Google").click()
-            expect(page).to_have_url(origin + "/dashboard")
+            expect(page).to_have_url(origin + "/")
             page.goto(origin + "/account")
             expect(
                 page.get_by_text("Use Google to sign in", exact=False)

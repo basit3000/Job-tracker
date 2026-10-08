@@ -10,7 +10,7 @@
     {{ field(form.display_name, "What should we call you?") }}
     {{ field(form.bio, "A little about your search", rows=3) }}
     {% call field(form.profile_visibility, control_class="form-select") %}<p class="form-text">Private profiles share stats and your bio with accepted friends. Public profiles are discoverable and viewable by signed-in members.</p>{% endcall %}
-    <div class="form-check mb-3">{{ form.share_jobs(class="form-check-input") }}{{ form.share_jobs.label(class="form-check-label") }}<p class="form-text">When enabled, profile viewers can see company, role, job link, status, and application date, and save a job to their own shortlist. Turn it off to hide your job list immediately.</p></div>
+    <div class="form-check mb-3">{{ form.share_jobs(class="form-check-input", aria_describedby="sharing-help") }}{{ form.share_jobs.label(class="form-check-label") }}<p class="form-text" id="sharing-help">When enabled, your applications appear on your profile and in the home feed for people who can view your profile: accepted friends for a private profile, or signed-in members for a public profile. They can see company, role, job link, status, and application date, and save a role to their shortlist. Turn it off to hide shared applications immediately.</p></div>
     {{ field(form.daily_goal, min=1, max=100) }}
     {{ form.submit(class="btn btn-primary") }}
   </form></div></section></div>

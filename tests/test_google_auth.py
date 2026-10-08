@@ -97,7 +97,7 @@ def test_google_signup_login_session_rotation_and_password_exclusion(
             email="changed@example.com",
             iss="accounts.google.com",
         ).location
-        == "/dashboard"
+        == "/"
     )
     with google_app.app_context():
         assert User.query.count() == 1
@@ -187,7 +187,7 @@ def test_google_state_expiry_replay_and_cross_browser_protection(
     assert finish(client, provider, params).location == "/login"
     assert provider.token_calls == 0
     params = begin(client)
-    assert finish(client, provider, params).location == "/dashboard"
+    assert finish(client, provider, params).location == "/"
     assert provider.token_calls == 1
     assert finish(client, provider, params).location == "/login"
     assert provider.token_calls == 1
@@ -269,11 +269,11 @@ def test_google_closed_signup_keeps_existing_google_login(
     with google_app.app_context():
         assert User.query.count() == 0
     google_app.config["PUBLIC_SIGNUP_ENABLED"] = True
-    assert finish(client, provider, begin(client)).location == "/dashboard"
+    assert finish(client, provider, begin(client)).location == "/"
     google_app.config["PUBLIC_SIGNUP_ENABLED"] = False
     with client.session_transaction() as session:
         session.clear()
-    assert finish(client, provider, begin(client)).location == "/dashboard"
+    assert finish(client, provider, begin(client)).location == "/"
 
 
 def test_google_csrf_disabled_config_transport_and_safe_redirect(
@@ -309,7 +309,7 @@ def test_google_csrf_disabled_config_transport_and_safe_redirect(
     )
     assert response.location == "/login"
     params = begin(client, next_page="https://evil.example.com")
-    assert finish(client, provider, params).location == "/dashboard"
+    assert finish(client, provider, params).location == "/"
     assert client.get("/account").status_code == 200
     assert app.test_client().get("/account").location.startswith("/login")
 
